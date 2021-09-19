@@ -1,0 +1,950 @@
+const { ccclass, property } = cc._decorator;
+
+export namespace no {
+
+    /**
+    * 消息系统
+    */
+    export let Evn = cc.systemEvent;
+
+    class st {
+        private _time: number;
+
+        public get now(): number {
+            return this._time;
+        }
+
+        public set now(v: number) {
+            this._time = v;
+        }
+
+        constructor() {
+            this._time = Math.floor((new Date()).getTime() / 1000);
+            setInterval(() => {
+                this._time++;
+            }, 1000);
+        }
+    }
+
+    export let SysTime = new st();
+
+
+
+    /**
+     * 通用二维属性类
+     */
+    export class Property2D {
+        public x: number;
+        public y: number;
+
+        constructor(x: number, y: number) {
+            this.x = x;
+            this.y = y;
+        }
+
+        public equals(other: Property2D): boolean {
+            return this.x == other.x && this.y == other.y;
+        }
+
+        public toVec3(): cc.Vec3 {
+            let a = cc.Vec3.ZERO;
+            a.x = this.x;
+            a.y = this.y;
+            return a;
+        }
+    }
+
+    @ccclass('EventHandlerInfo')
+    export class EventHandlerInfo {
+        @property(cc.Component.EventHandler)
+        hander: cc.Component.EventHandler = new cc.Component.EventHandler();
+        @property({ step: 1 })
+        order: number = 0;
+
+        public static sort(handlers: EventHandlerInfo[]): void {
+            if (handlers.length == 0) return;
+            handlers.sort((a, b) => {
+                return a.order - b.order;
+            });
+        }
+
+        public static execute(handlers: EventHandlerInfo[], ...args: any[]): void {
+            if (handlers.length == 0) return;
+            handlers.forEach(handler => {
+                handler.hander.emit([].concat(args, handler.hander.customEventData));
+            });
+        }
+    }
+
+    @ccclass('TimeWatcher')
+    export class TimeWatcher {
+        public static get new(): TimeWatcher {
+            return new TimeWatcher();
+        }
+
+        private t: number;
+        constructor() {
+            this.t = timestampMs();
+            err('TimeWatcher', 'start', this.t);
+        }
+
+        public blink(Evn?: string): void {
+            let t = timestampMs();
+            err('TimeWatcher', Evn || 'blink', t - this.t);
+            this.t = t;
+        }
+    }
+
+    export function log(...Evns: any[]): void {
+        if (CC_DEBUG) {
+            console.log.call(console, '#NoUi#', Evns);
+        }
+    }
+
+    export function err(...Evns: any[]): void {
+        if (CC_DEBUG) {
+            console.error.call(console, '#NoUi#', Evns);
+        }
+    }
+
+    /**
+     * 发出消息并回调一次
+     * @param type 
+     * @param callback 
+     * @param args 
+     * @param target 
+     */
+    export function emitAndOnceCallback(emitType: string, callbackType: string, callback: (v: any) => void, args?: any[], target?: any): void {
+        if (Evn['_callbackTable']?.[emitType] == null) {
+            callback(null);
+        } else {
+            Evn.once(callbackType, callback, target);
+            Evn.emit(emitType, args);
+        }
+    }
+
+    export async function emitAndOnceCallbackAsync(emitType: string, callbackType: string, args?: any[], target?: any): Promise<any> {
+        return new Promise<any>(resolve => {
+            this.emitAndOnceCallback(emitType, callbackType, resolve, args, target);
+        });
+    }
+
+    /**
+     * 等待事件
+     * @param type 事件类型
+     * @param target 
+     * @param arg 标识，当事件触发时会将这个值返回
+     */
+    export async function waitForEvent(type: string, target?: any, arg?: any): Promise<any> {
+        return new Promise<any>(resolve => {
+            Evn.once(type, () => {
+                resolve(arg);
+            }, target);
+        });
+    }
+
+    export async function waitFor(express: (dt?: number) => boolean): Promise<void> {
+        return new Promise<void>(resolve => {
+            this.callUntil(express, resolve);
+        });
+    }
+
+    export async function waiForEventValue(type: string, target?: any): Promise<any> {
+        return new Promise<any>(resolve => {
+            Evn.once(type, resolve, target);
+        });
+    }
+
+    export function callUntil(express: (dt?: number) => boolean, callback: () => void, dt = 0): void {
+        if (express(dt)) {
+            callback?.();
+            return;
+        }
+        dt = cc.director.getDeltaTime();
+        window.setTimeout(() => {
+            this.callUntil(express, callback, dt);
+        }, dt * 1000);
+    }
+
+    /**
+     * 根据模板格式化字符串
+     * @param formatter 模板，如'{a}:{b}:{c}' {0}:{1}:{2}
+     * @param data 需要替换的数据，如{'a':1,'b':2,'c':3}，返回1:2:3  [1,2,3] 1:2:3 
+     */
+    export function formatString(formatter: string, data: any): string {
+        var s = formatter;
+        let keys = Object.keys(data);
+        keys.forEach(k => {
+            s = s.replace(new RegExp('\\{' + k + '\\}', 'g'), data[k]);
+        });
+        return s;
+    }
+
+    export function evalFormateStr(formatter: string, data: any) {
+        let str = this.formatString(formatter, data);
+        return this.eval(str);
+    }
+
+    /**
+     * clone JSON对象
+     * @param json 
+     */
+    export function cloneJson(json: any): any {
+        return JSON.parse(JSON.stringify(json));
+    }
+
+
+    /**
+     * 
+     * @param hex '#412a00'
+     * @returns {r: 65, g: 42, b: 0}
+     */
+    export function hex2Rgb(hex: string) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+
+
+    /**
+     * 封装cc.Color.fromHEX
+     * @param v 
+     */
+    export function str2Color(v: string): cc.Color {
+        let c = cc.color();
+        cc.Color.fromHEX(c, v);
+        return c;
+    }
+
+    function hex2Ten(v: string): number {
+        let l = v.length;
+        var a = 0;
+        for (var i = 0; i < l; i++) {
+            var b: number;
+            switch (v[i].toLowerCase()) {
+                case 'a':
+                    b = 10;
+                    break;
+                case 'b':
+                    b = 11;
+                    break;
+                case 'c':
+                    b = 12;
+                    break;
+                case 'd':
+                    b = 13;
+                    break;
+                case 'e':
+                    b = 14;
+                    break;
+                case 'f':
+                    b = 15;
+                    break;
+                default:
+                    b = parseInt(v[i]);
+                    break;
+            }
+            a += Math.pow(16, l - i - 1) * b;
+        }
+        return a;
+    }
+
+    /**
+     * 大数字转换成最多3位数加单位的格式
+     * @param n 
+     */
+    export function num2str(n: number): string {
+        if (n < 1000) return String(n);
+        let unit = ['k', 'm', 'b'];
+        var a = '';
+        let s = String(n);
+        let len = s.length;
+        let l = len % 3;
+        if (l == 1) {
+            a = s[0] + '.' + s[1];
+        } else {
+            a = s[0] + s[1] + (l == 0 ? s[2] : '');
+        }
+        return a + unit[Math.floor(len / 3) - 1 - (l == 0 ? 1 : 0)];
+    }
+
+    /**
+     * 从数组里随机几n个元素
+     * @param arr 
+     * @param n 
+     */
+    export function arrayRandom(arr: any, n = 1): any {
+        if (!arr || arr.length == 0) return null;
+        if (arr.length == 1) return arr[0];
+        if (arr.length == n) return arr;
+        let a = [].concat(arr);
+        let c = [];
+        for (var i = 0; i < n; i++) {
+            let al = a.length;
+            if (al == 0) break;
+            let b = Math.floor(Math.random() * al);
+            c = [].concat(c, a.splice(b, 1));
+        }
+        return n == 1 ? c[0] : c;
+    }
+
+    /**
+     * 从object中获取值
+     * @param data 
+     * @param path 如a.b.c
+     */
+    export function getValue(data: Object, path?: string): any {
+        if (!path) {
+            return data;
+        }
+        let p = path.split('.');
+        let o = data;
+        let max = p.length;
+        for (let index = 0; index < max; index++) {
+            let k = p[index];
+            if (o[k] == null) return null;
+            o = o[k];
+        }
+        return o;
+    }
+
+    /**
+     * 
+     * @param data Object
+     * @param path ['a','b','c']
+     * @param def any 默认值
+     */
+    export function getValuePath(data: Object, path: any[], def?: any): void {
+        let k = path.join('.');
+        return this.getValue(data, k) || def
+    }
+
+    /**
+     * 向object中写入值
+     * @param data 
+     * @param path 如a.b.c
+     * @param value
+     */
+    export function setValue(data: Object, path: string, value: any): void {
+        let p = path.split('.');
+        let o = data;
+        let max = p.length;
+        for (let index = 0; index < max; index++) {
+            let k = p[index];
+            if (o[k] == null) {
+                if (index < max - 1) {
+                    o[k] = new Object();
+                    o = o[k];
+                } else {
+                    o[k] = value;
+                }
+            } else if (index < max - 1) {
+                o = o[k];
+            } else {
+                o[k] = value;
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param data Object
+     * @param path ['a','b','c']
+     * @param value any
+     */
+    export function setValuePath(data: Object, path: any[], value: any): void {
+        let k = path.join('.');
+        this.setValue(data, k, value)
+    }
+
+    /**
+     * 删除object中的值
+     * @param data 
+     * @param path 如a.b.c
+     */
+    export function deleteValue(data: Object, path: string): any {
+        let p = path.split('.');
+        let o = data;
+        let max = p.length;
+        for (let index = 0; index < max; index++) {
+            let k = p[index];
+            if (o[k] == null) {
+                return null;
+            } else if (index < max - 1) {
+                o = o[k];
+            } else {
+                let a = o[k];
+                delete o[k];
+                return a;
+            }
+        }
+    }
+
+    /**
+     * 连接多个字符串
+     * @param separator 
+     * @param strs 
+     */
+    export function joinStrings(separator: string, ...strs: string[]): string {
+        let a: string[] = [];
+        strs.forEach(str => {
+            if (str != null && str != '') {
+                a[a.length] = str;
+            }
+        });
+        return a.join(separator);
+    }
+    /**
+     * 连接多个字符串，默认连接符[.]
+     * @param strs 
+     */
+    export function join(...strs: string[]): string {
+        return this.joinStrings('.', ...strs);
+    }
+
+    /**
+     * 将一维数组转成2维数组
+     * @param array 原数组
+     * @param num 子数组最大长度
+     */
+    export function arrayToArrays(array: any[], num: number): any[] {
+        var dd = [];
+        let length = Math.ceil(array.length / num);
+        for (var ii = 0; ii < length; ii++) {
+            dd[ii] = [];
+            for (var jj = 0; jj < num; jj++) {
+                dd[ii][jj] = array[ii * num + jj];
+            }
+        }
+        return dd;
+    };
+
+    /**
+     * 
+     * @param array 
+     * @param item 
+     * @param key 
+     */
+    export function indexOfArray(array: any[], item: any, key: string): number {
+        if (array == null) return -1;
+        let len = array.length;
+        for (let i = 0; i < len; i++) {
+            if (array[i][key] == item || (array[i][key] == item[key] && item[key] != undefined)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    export function itemOfArray<T>(array: any[], value: any, key: string): T {
+        let i = this.indexOfArray(array, value, key);
+        if (i == -1) return null;
+        return array[i];
+    }
+
+    export function addToArray(array: any[], value: any, key?: string): void {
+        if (key == null && !array.includes(value)) {
+            array[array.length] = value;
+        } else if (key != null && this.indexOfArray(array, value, key) == -1) {
+            array[array.length] = value;
+        }
+    }
+
+    /**
+     * 在数据后插入新数据
+     * @param array 
+     * @param value 
+     */
+    export function pushToArray(array: any[], value: any): void {
+        if (value == null) return;
+        array[array.length] = value;
+    }
+
+    export function removeFromArray(array: any[], value: any, key?: string): void {
+        let i = -1;
+        if (key == null) {
+            i = array.indexOf(value);
+        } else {
+            i = this.indexOfArray(array, value, key);
+        }
+        if (i > -1) array.splice(i, 1);
+    }
+
+    /**
+     * 获得map中key的数组
+     * @param map 
+     */
+    export function MapKeys2Array<K, T>(map: Map<K, T>): K[] {
+        let a: K[] = [];
+        let keys = map.keys();
+        let b = keys.next();
+        while (!b.done) {
+            a[a.length] = b.value;
+            b = keys.next();
+        }
+        return a;
+    }
+
+    /**
+     * 获得map中value的数组
+     * @param map 
+     */
+    export function MapValues2Array<K, T>(map: Map<K, T>): T[] {
+        if (map == null || map.size == 0) return [];
+        let a: T[] = [];
+        let values = map.values();
+        let b = values.next();
+        while (!b.done) {
+            a[a.length] = b.value;
+            b = values.next();
+        }
+        return a;
+    }
+
+    /**
+     * 遍历kv对象
+     * @param d kv对象
+     * @param func return true时终止遍历
+     */
+    export function forEachKV(d: any, func: (k: any, v: any) => boolean) {
+        if (d == null) return;
+        let keys = Object.keys(d);
+        for (const key of keys) {
+            if (func(key, d[key]) === true) break;
+        }
+    }
+
+    /**
+     * 以v1为圆心从水平正x方向到v2的夹角
+     * @param v1 
+     * @param v2 
+     * @returns angle角度,radian弧度
+     */
+    export function angleTo(v1: cc.Vec2 | cc.Vec3, v2: cc.Vec2 | cc.Vec3): { angle: number, radian: number } {
+        let a = cc.v2(v2.x - v1.x, v2.y - v1.y);
+        let b = a.signAngle(cc.v2(1, 0));
+        return {
+            'angle': (360 - b / Math.PI * 180) % 360,
+            'radian': -b
+        };
+    }
+
+    /**
+     * 执行EventHandler
+     * @param handlers 
+     */
+    export function executeHandlers(handlers: cc.Component.EventHandler[], ...args: any[]): void {
+        handlers.forEach(handler => {
+            handler.emit([].concat(args, handler.customEventData));
+        });
+    }
+
+    /**
+     * Vec3转Vec2
+     * @param v3 
+     */
+    export function vec3ToVec2(v3: cc.Vec3): cc.Vec2 {
+        return new cc.Vec2(v3.x, v3.y);
+    }
+
+    /**
+     * 创建一个EventHandler
+     * @param target 
+     * @param component 
+     * @param handler 
+     * @param arg 
+     */
+    export function createEventHandler(target: cc.Node, component: string, handler: string, arg = ''): cc.Component.EventHandler {
+        let a = new cc.Component.EventHandler();
+        a.target = target;
+        a.component = component;
+        a.handler = handler;
+        a.customEventData = arg;
+        return a;
+    }
+
+    /**克隆 */
+    export function clone(d: any): any {
+        if (d instanceof Array) return JSON.parse(JSON.stringify(d));
+        else if (d instanceof Object) return cc.instantiate(d);
+        else return d;
+    }
+
+    /**
+     * 等待几秒
+     * @param duration 等待时长(秒)
+     * @param component 
+     * @returns 
+     */
+    export async function sleep(duration: number, component?: cc.Component): Promise<void> {
+        if (duration <= 0) duration = cc.director.getDeltaTime();
+        return new Promise<void>(resolve => {
+            if (component != null) {
+                component.scheduleOnce(resolve, duration);
+            } else {
+                window.setTimeout(resolve, duration * 1000);
+            }
+        });
+    }
+
+    // 两个数相除百分比
+    export function twoNumPercentage2Num(min, max, maxNum) {
+        if (min > max) {
+            min = max;
+        }
+        return Math.floor(min / max * maxNum);
+    }
+
+    /**
+     * 取两值之间的随机值
+     * @param min 
+     * @param max 
+     */
+    export function randomBetween(min: number, max: number): number {
+        if (min == max) return min;
+        if (min == null || max == null) return min || max;
+        return Math.random() * (max - min) + min;
+    }
+
+    /**当前时间戳（秒） */
+    export function timestamp(v = 0): number {
+        let a = new Date(SysTime.now * 1000);
+        return Math.floor(a.getTime() / 1000) + v;
+    }
+
+    /**当前时间戳（毫秒） */
+    export function timestampMs(v = 0): number {
+        let a = new Date(SysTime.now * 1000);
+        return a.getTime() + v;
+    }
+
+    /**当前零点时间戳（秒） */
+    export function zeroTimestamp(v = 0): number {
+        let a = new Date(SysTime.now * 1000);
+        a.setHours(0, 0, 0, 0);
+        return Math.floor(a.getTime() / 1000) + v;
+    }
+
+    /**转换为当前零点时间戳（秒） */
+    export function toZeroTimestamp(v: number): number {
+        let a = new Date(v * 1000);
+        a.setHours(0, 0, 0, 0);
+        return Math.floor(a.getTime() / 1000);
+    }
+
+    /**
+     * 将时间长度转成时分秒
+     * @param time 时间长度，秒
+     * @returns x小时x分x秒
+     */
+    export function time2LocalFormat(time: number): string {
+        let h: number, m: number, s: number;
+        h = Math.floor(time / 3600);
+        m = Math.floor((time % 3600) / 60);
+        s = time % 60;
+        return `${h}${m}${s}`;
+    }
+
+    /**
+     * 将时间长度转成时分秒
+     * @param time 时间长度，秒
+     * @returns x小时x分x秒
+     */
+    export function second2LocalString(seconds: number): string {
+        let h: number, m: number, s: number;
+        h = Math.floor(seconds / 3600);
+        m = Math.floor((seconds % 3600) / 60);
+        s = seconds % 60;
+        let a = '';
+        if (h > 0) a = `${h}`;
+        if (m > 0) a = `${a}`;
+        if (s > 0) a = `${a}`;
+        return a;
+    }
+
+    /**
+     * 秒转时间 10:01:01
+     * @param sec 秒
+     */
+    export function sec2time(sec: number, formatter?: string, show0 = true) {
+        // 负数不处理
+        if (sec <= 0) {
+            return '00:00:00'
+        }
+        formatter = formatter || '{h}:{m}:{s}';
+        let d = Math.floor(sec / 3600 / 24);
+        let h = Math.floor(sec / 3600 % 24);
+        if (d > 0) {
+            // todo i18n
+            formatter = `{d}{h}`;
+            return this.formatString(formatter, { h: h, d: d });
+        }
+
+        let m: any = Math.floor(sec / 60 % 60);
+        let s: any = Math.floor(sec % 60);
+
+        // if (h<=9){h = `0${h}`}
+        if (m <= 9 && show0) { m = `0${m}` }
+        if (s <= 9 && show0) { s = `0${s}` }
+
+        return this.formatString(formatter, { h: h, m: m, s: s });
+    }
+
+    /**
+     * 编辑器模式下加载资源
+     * @param path 
+     * @param callback 
+     */
+    export function loadAnyInEditor<T extends cc.Asset>(path: string, callback: (item: T) => void): void {
+        Editor.assetdb.queryAssets(`db://assets/${path}.*`, null, (err, assetInfos) => {
+            // Editor.log(JSON.stringify(assetInfos[0]));
+            cc.assetManager.loadAny(assetInfos[0].uuid, (e, f: T) => {
+                callback(f);
+            });
+        });
+    }
+
+    /**
+     * 节点的世界坐标
+     * @param node 
+     */
+    export function nodeWorldPosition(node: cc.Node, out?: cc.Vec3): cc.Vec3 {
+        out = out || cc.v3();
+        return node.parent?.convertToWorldSpaceAR(node.position, out) || out;
+    }
+
+    /**
+     * 某节点坐标转换到另一个节点内
+     * @param node 
+     * @param otherNode 
+     */
+    export function nodePositionInOtherNode(node: cc.Node, otherNode: cc.Node, out?: cc.Vec3): cc.Vec3 {
+        out = out || cc.v3();
+        let p = this.nodeWorldPosition(node, out);
+        return otherNode.convertToNodeSpaceAR(p, out);
+    }
+
+    /**
+     * 数组排序
+     * @param arr 
+     * @param handler 排序方法,为空则按数字大小排序
+     * @param desc 是否降序
+     */
+    export function sortArray(arr: Array<any>, handler?: (a: any, b: any) => number, desc = false): void {
+        if (arr == null || arr.length == 0) return;
+        handler = handler || function (a: number, b: number) {
+            return a - b;
+        };
+        arr.sort((a, b) => {
+            if (desc) return handler(b, a);
+            return handler(a, b);
+        });
+    }
+
+    /**
+     * 节点在world中的rect
+     * @param node 
+     */
+    export function nodeBoundingBox(node: cc.Node, offset?: cc.Vec2, subSize?: cc.Size): cc.Rect {
+        offset = offset || cc.v2();
+        subSize = subSize || cc.size(0);
+        let origin = cc.v3();
+        origin = this.nodeWorldPosition(node, origin);
+        let anchor = node.getAnchorPoint();
+        let size = node.getContentSize();
+        let rect = cc.rect();
+        rect.height = size.height + subSize.height;
+        rect.width = size.width + subSize.width;
+        rect.center = cc.v2(origin.x + (0.5 - anchor.x) * size.width + offset.x, origin.y + (0.5 - anchor.y) * size.height + offset.y);
+        return rect;
+    }
+
+    /**
+     * 判断点是否在节点范围内
+     * @param node 
+     */
+    export function nodeContainsPoint(node: cc.Node, point: cc.Vec2, offset?: cc.Vec2, subSize?: cc.Size): boolean {
+        let rect = this.nodeBoundingBox(node, offset, subSize);
+        return rect.contains(point);
+    }
+
+    /**
+     * 判断两个节点是否相交
+     * @param node 
+     * @param otherNode 
+     * @returns 
+     */
+    export function nodeIntersects(node: cc.Node, otherNode: cc.Node): boolean {
+        let rect = this.nodeBoundingBox(node),
+            rect1 = this.nodeBoundingBox(otherNode);
+        return rect.intersects(rect1);
+    }
+
+    /**
+     * 对象转数组
+     * @param obj 
+     * @param keyName 
+     * @param valueName 
+     * @returns 
+     */
+    export function object2Array(obj: any, keyName: string, valueName: string): any[] {
+        if (obj == null || keyName == null || valueName == null) return null;
+        let arr = new Array();
+        let keys = Object.keys(obj);
+        keys.forEach(key => {
+            arr[arr.length] = {
+                [keyName]: key,
+                [valueName]: obj[key]
+            };
+        });
+        return arr;
+    }
+
+    /**
+     * 对象转数组
+     * @param obj 
+     * @returns 
+     */
+    export function object2List(obj: any): any[] {
+        if (obj == null) return [];
+        let arr = new Array();
+        let keys = Object.keys(obj);
+        keys.forEach(key => {
+            arr[arr.length] = obj[key];
+        });
+        return arr;
+    }
+
+    /**
+     * 根据权重随机
+     * @param weight 权重数组
+     * @returns 权重索引
+     */
+    export function weightRandom(weight: number[]): number {
+        let sum = 0;
+        weight.forEach(w => {
+            sum += w;
+        });
+        let r = Math.random() * sum;
+        let n = weight.length;
+        let a = 0;
+        for (let i = 0; i < n; i++) {
+            if (weight[i] == 0) continue;
+            a += weight[i];
+            if (r <= a) {
+                return i;
+            }
+        }
+    }
+    /**
+     * 根据权重随机
+     * @param weight 权重数组
+     * @param key 权重值对应key
+     * @returns 权重索引
+     */
+    export function weightRandomObject(weight: any[], key: string): number {
+        let a: number[] = [];
+        weight.forEach(item => {
+            a[a.length] = Number(item[key]);
+        });
+        return this.weightRandom(a);
+    }
+
+    export function getWeekNumber(userCtime: number) {
+        /*
+        根据玩家创建时间获得当前第几周
+        */
+        let number = 1;
+        var date1 = new Date(SysTime.now * 1000),
+            time1 = date1.getTime(),
+            date2 = new Date(userCtime * 1000),
+            time2 = date2.getTime();
+        // 兼容修改时间引起的报错
+        if (time1 < time2) {
+            return number;
+        }
+        var d = Math.round((date1.valueOf() - date2.valueOf()) / 86400000);
+        return Math.ceil((d + ((date2.getDay() + 1) - 1)) / 7);
+    }
+
+    export class Data {
+
+        private _data: any;
+
+        public get data(): any {
+            return this._data;
+        }
+
+        public set data(v: any) {
+            this._data = v;
+        }
+
+        /**转成json string */
+        public get json(): string {
+            return JSON.stringify(this._data);
+        }
+
+        /**将json string转成data */
+        public set json(v: string) {
+            this._data = JSON.parse(v);
+        }
+
+        /**
+         * 读
+         * @param path 
+         */
+        public get(paths?: string | string[]): any {
+            if (this._data == null) return null;
+            if (paths == null || paths == '*') return this._data;
+            paths = [].concat(paths);
+            if (paths.length == 1) {
+                return no.getValue(this._data, paths[0]);
+            } else {
+                let a = new Object();
+                for (const k of paths) {
+                    let p = k.split('.');
+                    a[p[p.length - 1]] = no.getValue(this._data, k);
+                }
+                return a;
+            }
+        }
+        /**
+         * 写
+         * @param path 
+         * @param value 如果value为null，则不处理
+         */
+        public set(path: string, value: any) {
+            if (this._data == null) {
+                this._data = {};
+            }
+            if (value instanceof Object && value['constructor'] === Object) {
+                if (Object.keys(value).length == 0) {
+                    no.setValue(this._data, path, value);
+                } else {
+                    no.forEachKV(value, (key, v) => {
+                        this.set(path + '.' + key, v);
+                        return false;
+                    });
+                }
+            } else {
+                no.setValue(this._data, path, value);
+            }
+        }
+
+        /**
+         * 删
+         * @param path 
+         */
+        public delete(path: string): any {
+            if (this._data == null) return null;
+            return no.deleteValue(this._data, path);
+        }
+
+        public clear(): void {
+            this._data = {};
+        }
+    }
+}
