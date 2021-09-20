@@ -10,7 +10,7 @@ import FuckUi from "./FuckUi";
 const { ccclass, menu } = cc._decorator;
 
 @ccclass
-@menu('NoUi/ui/SetSize(设置宽高)')
+@menu('NoUi/ui/SetSize(设置宽高:object)')
 export default class SetSize extends FuckUi {
 
     protected onDataChange(data: any) {

@@ -10,7 +10,7 @@ import FuckUi from "./FuckUi";
 const {ccclass, property, menu} = cc._decorator;
 
 @ccclass
-@menu('NoUi/ui/SetHeight(设置高)')
+@menu('NoUi/ui/SetHeight(设置高:number)')
 export default class SetHeight extends FuckUi {
 
     @property({ displayName: '是否百分比' })

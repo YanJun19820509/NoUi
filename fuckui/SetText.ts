@@ -11,7 +11,7 @@ import FuckUi from "./FuckUi";
 const { ccclass, property, menu } = cc._decorator;
 
 @ccclass
-@menu('NoUi/ui/SetText(设置文本内容)')
+@menu('NoUi/ui/SetText(设置文本内容:string)')
 export default class SetText extends FuckUi {
 
     @property({ displayName: '格式化模板' })
