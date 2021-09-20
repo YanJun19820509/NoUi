@@ -26,6 +26,7 @@ export namespace no {
         }
     }
 
+    /**系统时间 */
     export let SysTime = new st();
 
 
@@ -54,6 +55,7 @@ export namespace no {
         }
     }
 
+    /**事件处理类 */
     @ccclass('EventHandlerInfo')
     export class EventHandlerInfo {
         @property(cc.Component.EventHandler)
@@ -61,21 +63,23 @@ export namespace no {
         @property({ step: 1 })
         order: number = 0;
 
-        public static sort(handlers: EventHandlerInfo[]): void {
+        public static execute(handlers: EventHandlerInfo[], ...args: any[]): void {
+            if (handlers.length == 0) return;
+            this.sort(handlers);
+            handlers.forEach(handler => {
+                handler.hander.emit([].concat(args, handler.hander.customEventData));
+            });
+        }
+
+        private static sort(handlers: EventHandlerInfo[]): void {
             if (handlers.length == 0) return;
             handlers.sort((a, b) => {
                 return a.order - b.order;
             });
         }
-
-        public static execute(handlers: EventHandlerInfo[], ...args: any[]): void {
-            if (handlers.length == 0) return;
-            handlers.forEach(handler => {
-                handler.hander.emit([].concat(args, handler.hander.customEventData));
-            });
-        }
     }
 
+    /**debug用时间日志 */
     @ccclass('TimeWatcher')
     export class TimeWatcher {
         public static get new(): TimeWatcher {
@@ -870,6 +874,7 @@ export namespace no {
         return Math.ceil((d + ((date2.getDay() + 1) - 1)) / 7);
     }
 
+    /**基础数据类 */
     export class Data {
 
         private _data: any;
@@ -947,4 +952,598 @@ export namespace no {
             this._data = {};
         }
     }
+
+
+    /**资源管理 */
+
+    class AssetPath {
+        public bundle: string;
+        public file: string;
+        public type: typeof cc.Asset;
+
+        constructor(bundle?: string, file?: string, type?: typeof cc.Asset) {
+            this.bundle = bundle;
+            this.file = file;
+            this.type = type;
+        }
+    }
+    class AssetBundleManager {
+
+        private needReleaseAssets: cc.Asset[] = [];
+
+        public constructor() {
+            //用于设置下载的最大并发连接数，若当前连接数超过限制，将会进入等待队列。
+            cc.assetManager.downloader.maxConcurrency = 10;
+            //用于设置每帧发起的最大请求数，从而均摊发起请求的 CPU 开销，避免单帧过于卡顿
+            cc.assetManager.downloader.maxRequestsPerFrame = 10;
+            cc.assetManager.downloader.maxRetryCount = 10;
+            setInterval(() => {
+                this.releaseAssets();
+            }, 60000);
+        }
+
+        /**
+         * 预加载bundles
+         * @param paths 
+         * @param onProgress 
+         */
+        public loadBundles(paths: string[], onProgress: (progress: number) => void): void {
+            if (paths == null) {
+                onProgress && onProgress(1);
+                return;
+            }
+            this._loadB(paths, 0, onProgress);
+        }
+
+        private _loadB(paths: string[], i: number, callback: (p: number) => void) {
+            let p = paths[i];
+            let n = paths.length;
+            this.loadBundle(p, () => {
+                i++;
+                callback && callback(i / n);
+                i < n && this._loadB(paths, i, callback);
+            });
+        }
+        /**
+         * 预加载files
+         * @param bundleName 
+         * @param filePaths 
+         * @param onProgress 
+         */
+        public preloadFiles(bundleName: string, filePaths: string[], onProgress: (progress: number) => void): void {
+            let bundle = this.getBundle(bundleName);
+            if (bundle == null) {
+                this.loadBundle(bundleName, () => {
+                    this.preloadFiles(bundleName, filePaths, onProgress);
+                });
+            } else {
+                bundle.preload(filePaths, cc.Asset, (finished, total, requestItem) => {
+                    onProgress && onProgress(finished / total);
+                }, (err, items) => {
+                    if (items == null || items.length == 0) {
+                        onProgress && onProgress(0);
+                        no.log(err.message);
+                    }
+                });
+            }
+        }
+
+        /**
+         * 预加载场景
+         * @param name 
+         * @param onProgress 
+         */
+        public preloadScene(name: string, onProgress: (progress: number) => void): void {
+            cc.director.preloadScene(name, (finished, total, item) => {
+                // onProgress && onProgress((finished / total) || 0);
+            }, (err) => {
+                if (err) {
+                    no.log(err.message);
+                } else {
+                    onProgress && onProgress(1);
+                }
+            });
+        }
+        /**
+         * 加载bundle
+         * @param name 
+         * @param callback 
+         */
+        public loadBundle(name: string, callback: () => void): void {
+            let bundle = this.getBundle(name);
+            if (bundle != null) {
+                callback && callback();
+                return;
+            }
+            cc.assetManager.loadBundle(name, (err, b) => {
+                if (err != null) {
+                    no.log(err.message);
+                } else {
+                    callback && callback();
+                }
+            });
+        }
+        /**
+         * 获取已加载的bundle
+         * @param name 
+         */
+        public getBundle(name: string): cc.AssetManager.Bundle {
+            return cc.assetManager.getBundle(name);
+        }
+
+        /**
+         * 通用资源加载
+         * @param path 
+         * @param type 
+         * @param callback 
+         */
+        public loadFile(path: string, type: typeof cc.Asset, callback: (asset: cc.Asset) => void): void {
+            let p = this.assetPath(path);
+            this.load(p.bundle, p.file, type, (asset: cc.Asset) => {
+                callback(asset);
+            });
+        }
+        /**
+         * 加载bundle中的文件
+         * @param bundleName 
+         * @param fileName 
+         * @param type 
+         * @param callback 
+         */
+        private load(bundleName: string, fileName: string, type: typeof cc.Asset, callback: (asset: cc.Asset) => void): void {
+            if (bundleName == null || bundleName == '') {
+                cc.assetManager.loadAny(fileName, null, (err, item) => {
+                    if (item == null) {
+                        no.log(err.message);
+                    } else {
+                        this.addRef(item);//增加引用计数
+                        callback && callback(item);
+                    }
+                });
+            }
+            else {
+                let bundle = this.getBundle(bundleName);
+                if (bundle != null) {
+                    bundle.load(fileName, type, (err, item) => {
+                        if (item == null) {
+                            no.log(err.message);
+                        } else {
+                            this.addRef(item);//增加引用计数
+                            callback && callback(item);
+                            this.loadDepends(item['_uuid']);
+                        }
+                    });
+                } else {
+                    this.loadBundle(bundleName, () => {
+                        this.load(bundleName, fileName, type, callback);
+                    });
+                }
+            }
+        }
+
+        public loadText(path: string, callback: (item: cc.TextAsset) => void): void {
+            this.loadFile(path, cc.TextAsset, callback);
+        }
+
+        public loadJSON(path: string, callback: (item: cc.JsonAsset) => void): void {
+            this.loadFile(path, cc.JsonAsset, callback);
+        }
+
+        public loadSprite(path: string, callback: (item: cc.SpriteFrame) => void): void {
+            this.loadFile(path, cc.SpriteFrame, callback);
+        }
+
+        public loadAtlas(path: string, callback: (item: cc.SpriteAtlas) => void): void {
+            this.loadFile(path, cc.SpriteAtlas, callback);
+        }
+
+        public loadTexture(path: string, callback: (item: cc.Texture2D) => void): void {
+            this.loadFile(path, cc.Texture2D, callback);
+        }
+
+        public loadAudio(path: string, callback: (item: cc.AudioClip) => void): void {
+            this.loadFile(path, cc.AudioClip, callback);
+        }
+
+        public loadPrefab(path: string, callback: (item: cc.Prefab) => void): void {
+            this.loadFile(path, cc.Prefab, callback);
+        }
+
+        public loadAnimationClip(path: string, callback: (item: cc.AnimationClip) => void): void {
+            this.loadFile(path, cc.AnimationClip, callback);
+        }
+
+        public loadTiledMap(path: string, callback: (item: cc.TiledMapAsset) => void): void {
+            this.loadFile(path, cc.TiledMapAsset, callback);
+        }
+
+        // public loadDragonBonesAtlasAsset(path: string, callback: (item: dragonBones.DragonBonesAtlasAsset) => void): void {
+        //     this.loadFile(path, dragonBones.DragonBonesAtlasAsset, callback);
+        // }
+
+        // public loadDragonBonesAsset(path: string, callback: (item: dragonBones.DragonBonesAsset) => void): void {
+        //     this.loadFile(path, dragonBones.DragonBonesAsset, callback);
+        // }
+
+        public loadFiles<T extends cc.Asset>(bundleName: string, filePaths: string[], onProgress: (progress: number) => void, onComplete: (items: T[]) => void): void {
+            let bundle = this.getBundle(bundleName);
+            bundle.load<T>(filePaths, (finished, total, requestItem) => {
+                onProgress && onProgress(finished / total);
+            }, (err, items) => {
+                if (items == null || items.length == 0) {
+                    onProgress && onProgress(0);
+                    no.log(err.message);
+                } else {
+                    items.forEach(item => {
+                        this.addRef(item);//增加引用计数
+                        this.loadDepends(item['_uuid']);
+                    });
+                    onComplete && onComplete(items);
+                }
+                no.log('loadFiles', items);
+            });
+        }
+        /**
+         * 加载场景
+         * @param name 
+         * @param callback 
+         */
+        public loadScene(name: string, callback: () => void): void {
+            cc.director.loadScene(name, callback);
+        }
+
+        /**
+         * 从服务器加载文件
+         * @param url 
+         * @param callback 
+         */
+        public loadRemoteFile<T extends cc.Asset>(url: string, callback: (file: T) => void) {
+            cc.assetManager.loadRemote<T>(url, (err, file) => {
+                if (file == null) {
+                    no.log(err.message);
+                    callback && callback(null);
+                } else {
+                    this.addRef(file);//增加引用计数
+                    callback && callback(file);
+                }
+            });
+        }
+
+        public loadRemoteText(url: string, callback: (file: cc.TextAsset) => void) {
+            this.loadRemoteFile<cc.TextAsset>(url, callback);
+        }
+
+        /**
+         * 获取bundle路径，文件名及文件类型
+         * @param path 
+         * @returns  `{'bundle','file','type'}
+         */
+        public assetPath(path: string): AssetPath {
+            let p = path.split('/');
+            let file = p.pop().split('.');
+            let fileName = file[0],
+                fileType = file[1];
+            let bundle: string;
+            let n = p.length;
+            for (let i = n - 1; i >= 0; i--) {
+                bundle = p.join('/');
+                if (this.getBundle(bundle) != null) {
+                    break;
+                } else {
+                    bundle = '';
+                    let f = p.pop();
+                    fileName = [f, fileName].join('/');
+                }
+            }
+            let a = new AssetPath(bundle, fileName);
+            let s: typeof cc.Asset;
+            if (fileType != null) {
+                switch (fileType.toLowerCase()) {
+                    case 'json':
+                        s = cc.JsonAsset;
+                        break;
+                    case 'mp3':
+                        s = cc.AudioClip;
+                        break;
+                    case 'png':
+                    case 'jpg':
+                        s = cc.Texture2D;
+                        break;
+                    case 'prefab':
+                        s = cc.Prefab;
+                        break;
+                    case 'atlas':
+                        s = cc.SpriteAtlas;
+                        break;
+                    case 'tmx':
+                        s = cc.TiledMapAsset;
+                        break;
+                }
+                a.type = s;
+            }
+            return a;
+        }
+
+        public loadAllFilesInBundle(bundleName: string, onProgress: (progress: number) => void, onComplete: (items: cc.Asset[]) => void) {
+            let bundle = this.getBundle(bundleName);
+            if (bundle != null) {
+                let paths = Object.keys(bundle['_config'].paths._map);
+                this.loadFiles(bundleName, paths, onProgress, onComplete);
+            } else {
+                this.loadBundle(bundleName, () => {
+                    this.loadAllFilesInBundle(bundleName, onProgress, onComplete);
+                });
+            }
+        }
+
+        public preloadAllFilesInBundle(bundleName: string, onProgress: (progress: number) => void) {
+            let bundle = this.getBundle(bundleName);
+            if (bundle != null) {
+                let paths = Object.keys(bundle['_config'].paths._map);
+                this.preloadFiles(bundleName, paths, onProgress);
+            } else {
+                this.loadBundle(bundleName, () => {
+                    this.preloadAllFilesInBundle(bundleName, onProgress);
+                });
+            }
+        }
+
+        public loadAllFilesInFolder(folderName: string, onProgress: (progress: number) => void, onComplete: (items: cc.Asset[]) => void) {
+            let p = this.assetPath(folderName);
+            if (p.bundle == '') {
+                no.err(`${folderName}没有设置ab包`);
+                return;
+            }
+            p.file += '/';
+            let bundle = this.getBundle(p.bundle);
+            let keys = Object.keys(bundle['_config'].paths._map);
+            let paths: string[] = [];
+            keys.forEach(key => {
+                if (key.indexOf(p.file) == 0) {
+                    paths.push(key);
+                }
+            });
+            this.loadFiles(p.bundle, paths, onProgress, onComplete);
+        }
+
+        public preloadAllFilesInFolder(folderName: string, onProgress: (progress: number) => void) {
+            let p = this.assetPath(folderName);
+            if (p.bundle == '') {
+                no.err(`${folderName}没有设置ab包`);
+                return;
+            }
+            p.file += '/';
+            let bundle = this.getBundle(p.bundle);
+            let keys = Object.keys(bundle['_config'].paths._map);
+            let paths: string[] = [];
+            keys.forEach(key => {
+                if (key.indexOf(p.file) == 0) {
+                    paths.push(key);
+                }
+            });
+            this.preloadFiles(p.bundle, paths, onProgress);
+        }
+
+        public loadByUuid<T extends cc.Asset>(requestInfo: { uuid: string, type: typeof cc.Asset, bundle: string }, callback: (file: T) => void) {
+            cc.assetManager.loadAny(requestInfo, (e: Error, f: T) => {
+                if (e != null) {
+                    no.err(e.stack);
+                }
+                this.addRef(f);//增加引用计数
+                callback(f);
+            });
+        }
+
+        public addRef(asset: cc.Asset): void {
+            // if (asset == null) return;
+            // asset['myRefCount'] = asset['myRefCount'] || 0;
+            // asset['myRefCount']++;
+        }
+
+        public decRef(asset: cc.Asset): void {
+            // if (asset == null || !asset.isValid) return;
+            // asset['myRefCount'] = asset['myRefCount'] || 0;
+            // asset['myRefCount']--;
+            // if (asset['myRefCount'] == 0) {
+            //     asset['lastTime'] = no.timestamp();
+            //     no.addToArray(this.needReleaseAssets, asset);
+            // }
+        }
+
+        private releaseAssets() {
+            let t = no.timestamp();
+            for (let n = this.needReleaseAssets.length, i = n - 1; i >= 0; i--) {
+                let asset = this.needReleaseAssets[i];
+                if (asset['myRefCount'] == 0 && t - asset['lastTime'] > 60) {
+                    cc.assetManager.releaseAsset(asset);
+                    this.needReleaseAssets.splice(i, 1);
+                } else if (asset['myRefCount'] > 0) {
+                    this.needReleaseAssets.splice(i, 1);
+                }
+            }
+        }
+
+        /**
+         * 加载依赖的资源 
+         * @param uuid 依赖资源的uuid数组
+         */
+        private loadDepends(uuid: string) {
+            let a: any[] = [];
+            let list = cc.assetManager.dependUtil.getDepsRecursively(uuid);
+            if (list.length == 0) return;
+            list.forEach(uuid => {
+                a.push({ uuid: uuid });
+            });
+            cc.assetManager.loadAny(a, (e, item) => {
+                if (item == null) no.err(e.message);
+            });
+        }
+    }
+
+    /**全局资源管理器 */
+    export let assetBundleManager = new AssetBundleManager();
+
+    /**缓存池 */
+    class CachePool {
+        private cacheMap: Map<string, any[]>;
+        private cacheUseMap: Map<string, number>;
+
+        constructor() {
+            this.cacheMap = new Map<string, any[]>();
+            this.cacheUseMap = new Map<string, number>();
+            window.setTimeout(() => {
+                this.checkClear();
+            }, 60000);
+        }
+
+        /**
+         * 获取缓存的对象
+         * @param type 
+         */
+        public reuse<T>(type: string): T {
+            if (!this.cacheMap.has(type)) return null;
+            this.cacheUseMap.set(type, no.timestamp());
+            this.cacheMap.get(type).shift();
+        }
+
+        /**
+         * 回收缓存对象
+         * @param type 
+         * @param object 
+         */
+        public recycle(type: string, object: any): void {
+            if (type == null || type == '') {
+                log(`${object.name}未指定回收类型，不做回收处理，直接销毁`);
+                if (object instanceof cc.Node)
+                    object.destroy();
+                else object = null;
+                return;
+            }
+            if (!this.cacheMap.has(type)) this.cacheMap.set(type, []);
+            if (object instanceof cc.Node) {
+                object.parent = null;
+                object.active = false;
+            }
+            this.cacheMap.get(type).push(object);
+        }
+
+        public clearAll(): void {
+            let types = no.MapKeys2Array(this.cacheMap);
+            let n = types.length;
+            for (let i = 0; i < n; i++) {
+                this.clear(types[i]);
+            }
+        }
+
+        public clear(type: string): void {
+            if (type != null && this.cacheMap.has(type)) {
+                let a = this.cacheMap.get(type).splice(1);
+                a.forEach(obj => {
+                    if (obj instanceof cc.Node)
+                        obj.destroy();
+                    else obj = null;
+                });
+            }
+        }
+
+        private checkClear() {
+            let types = no.MapKeys2Array(this.cacheUseMap);
+            let n = types.length;
+            let t = no.timestamp();
+            for (let i = 0; i < n; i++) {
+                let type = types[i];
+                if (t - this.cacheUseMap.get(type) > 60000)
+                    this.clear(type);
+            }
+        }
+    }
+    /**全局缓存池 */
+    export let cachePool = new CachePool();
+
+    /**红点管理类 */
+    class HintCenter {
+        private event: cc.SystemEvent = new cc.SystemEvent();
+        private data: Map<string, number> = new Map<string, number>();
+        private timestampHit: object = new Object();
+
+        public clear() {
+            this.event.clear();
+        }
+
+        constructor() {
+            setInterval(this.checkHint, 2000);
+        }
+
+        /**
+         * 设置红点
+         * @param type 红点类型
+         * @param v v为红点数量,v>0时显示红点，否则隐藏
+         */
+        public setHint(type: string, v: number) {
+            this.data.set(type, v);
+            this.event.emit(type, v, type);
+        }
+
+        public changeHint(type: string, v: number): void {
+            let a = this.getHintValue(type);
+            a += v;
+            if (a < 0) a = 0;
+            this.setHint(type, a);
+        }
+
+        /**
+         * 监听红点状态
+         * @param type 红点类型
+         * @param func 
+         * @param target 
+         */
+
+        public onHint(type: string, func: Function, target: any): void {
+            this.event.on(type, func, target);
+            if (this.data.has(type)) {
+                this.event.emit(type, this.data.get(type), type);
+            }
+        }
+
+        /**
+         * 移除红点状态监听
+         * @param target 
+         */
+        public offHint(target: any): void {
+            this.event.targetOff(target);
+        }
+
+        /**
+         * 按时间戳设置红点
+         * @param type 红点类型
+         * @param time 将来时间戳
+         */
+        public setHintTimestamp(type: string, time: number): void {
+            if (time < timestamp()) {
+                return;
+            } else {
+                if (this.timestampHit[type] == null || this.timestampHit[type] > time)
+                    this.timestampHit[type] = time;
+            }
+        }
+
+        public getHintValue(type: string): number {
+            let n = 0;
+            if (this.data.has(type)) n = this.data.get(type);
+            return n;
+        }
+
+        private checkHint(): boolean {
+            forEachKV(this.timestampHit, (type, value) => {
+                if (value <= timestamp()) {
+                    this.setHint(type, 1);
+                    delete this.timestampHit[type];
+                }
+                return false;
+            });
+            return true;
+        }
+    }
+    /**全局红点管理器 */
+    export let hintCenter = new HintCenter();
 }
