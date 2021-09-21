@@ -9,20 +9,20 @@ import FuckUi from "../fuckui/FuckUi";
 import { no } from "../no";
 import { YJComponent } from "./YJComponent";
 
-const { ccclass, property } = cc._decorator;
+const { ccclass, property, menu } = cc._decorator;
 
 @ccclass
+@menu('NoUi/base/YJDataWork(数据处理基类)')
 export default class YJDataWork extends YJComponent {
 
     @property(cc.Node)
     target: cc.Node = null;
 
     private _data: no.Data = new no.Data();
-    private _data2ui = {};
+    private _data2ui: object;
 
-    start() {
+    onLoad() {
         if (this.target == null) this.target = this.node;
-        this.findAllFunckUis();
         this.init();
     }
 
@@ -46,6 +46,7 @@ export default class YJDataWork extends YJComponent {
     }
 
     private findAllFunckUis() {
+        this._data2ui = {};
         let a = this.target.getComponentsInChildren(FuckUi);
         a.forEach(ui => {
             let keys = ui.bindKeys;
@@ -57,6 +58,8 @@ export default class YJDataWork extends YJComponent {
     }
 
     private onValueChange(key: string, value: any) {
+        if (this._data2ui == null)
+            this.findAllFunckUis();
         let ui: FuckUi[] = this._data2ui[key];
         this.setUiData(ui, value);
         if (value instanceof Array) {
