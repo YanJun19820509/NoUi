@@ -16,53 +16,35 @@ const { ccclass, property, menu } = cc._decorator;
 @menu('NoUi/ui/SetPrefab(动态创建节点:object|array)')
 export default class SetPrefab extends FuckUi {
 
-    @property(YJLoadPrefab)
+    @property({ type: YJLoadPrefab, displayName: '元素预制体' })
     loadPrefab: YJLoadPrefab = null;
 
-    @property(cc.Node)
-    target: cc.Node = null;
+    @property({ type: cc.Node, displayName: '容器' })
+    container: cc.Node = null;
 
-    protected _list: Object;
+    onLoad() {
+        this.container = this.container || this.node;
+    }
 
     protected onDataChange(data: any) {
-        if (data == null) return;
-        this.setItems(data);
+        this.setItems([].concat(data));
     }
 
-    private async setItems(data: any) {
-        await this.loadPrefab.loadPrefab();
-        this.createItems(data);
-    }
-
-    protected async createItems(data: any) {
-        if (this._list == null)
-            this._list = new Object();
-        let arr = [].concat(data);
-        let len = arr.length;
-        if (len == 0) {
-            for (const key in this._list) {
-                this._list[key].destroy();
+    private async setItems(data: any[]) {
+        let n = data.length
+        if (this.container.childrenCount < n) {
+            let node = await this.loadPrefab.loadPrefab();
+            for (let i = this.container.childrenCount; i < n; i++) {
+                cc.instantiate(node).parent = this.container;
             }
-            this._list = null;
-            return;
         }
-        for (const key in this._list) {
-            this._list[key].active = false;
-        }
-        for (let i = 0; i < len; i++) {
-            if (arr[i] == null) continue;
-            let id = String(i);
-            if (!this._list[id]) {
-                let item = cc.instantiate(this.loadPrefab.loadedNode);
-                item.active = false;
-                item.parent = this.target || this.node;
-                this._list[id] = item;
-                await no.sleep(0.1);
+        for (let i = 0; i < n; i++) {
+            let item = this.container.children[i];
+            if (data[i] == null) item.active = false;
+            else {
+                item.active = true;
+                (item.getComponent(YJDataWork) || item.getComponentInChildren(YJDataWork)).data = data[i];
             }
-
-            let dataWork = this._list[id].getComponent(YJDataWork) || this._list[id].getComponentInChildren(YJDataWork);
-            if (dataWork)
-                dataWork.data = arr[i];
         }
     }
 }
