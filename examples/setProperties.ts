@@ -14,13 +14,20 @@ const { ccclass, menu } = cc._decorator;
 export default class setProperties extends YJDataWork {
 
     protected init() {
+        let list = [];
+        for (let i = 0; i < 100; i++) {
+            list[list.length] = {
+                name: `listItem${i}`
+            };
+        }
         this.data = {
             angle: 0,
             color: '303030',
             size: { w: 100, h: 100 },
             gray: false,
             text: 'Hello NoUi',
-            deadline: 60
+            deadline: 60,
+            list: list
         };
     }
 
