@@ -54,4 +54,20 @@ export default class setProperties extends YJDataWork {
     public a_changeTime() {
         this.setValue('deadline', 10);
     }
+
+    public a_setPosition() {
+        this.setValue('pos', [50, 50]);
+    }
+
+    public a_setOpacity() {
+        this.setValue('opacity', 100);
+    }
+
+    public a_setProgress() {
+        this.setValue('progress', 0.6);
+    }
+
+    public a_setScale() {
+        this.setValue('scale', 1.5);
+    }
 }
