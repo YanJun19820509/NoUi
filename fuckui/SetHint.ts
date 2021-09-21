@@ -26,7 +26,6 @@ export default class SetHint extends FuckUi {
     }
 
     protected onDataChange(data: any) {
-        if (data == null) return;
         let v = Number(data);
         this.targetNode.active = v > 0;
         if (this.isNumber && this.label != null)

@@ -7,10 +7,11 @@
 
 import { no } from "../no";
 
-const { ccclass, property, menu } = cc._decorator;
+const { ccclass, property, menu, executeInEditMode } = cc._decorator;
 
 @ccclass
 @menu('NoUi/base/YJLoadPrefab(加载预制体)')
+@executeInEditMode
 export default class YJLoadPrefab extends cc.Component {
 
     @property

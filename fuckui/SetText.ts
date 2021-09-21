@@ -41,7 +41,6 @@ export default class SetText extends FuckUi {
 
 
     protected onDataChange(data: any) {
-        if (data == null) return;
         if (typeof data == 'object') {
             for (let k in data) {
                 if (data[k] == null) return;

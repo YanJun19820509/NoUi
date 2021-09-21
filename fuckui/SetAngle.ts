@@ -14,7 +14,6 @@ const {ccclass, menu} = cc._decorator;
 export default class SetAngle extends FuckUi {
 
     protected onDataChange(data: any){
-        if (data == null) return;
         this.node.angle = Number(data);
     }
 }

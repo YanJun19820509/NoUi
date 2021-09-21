@@ -17,7 +17,6 @@ export default class SetInteractable extends FuckUi {
     reverse: boolean = false;
 
     protected onDataChange(data: any) {
-        if (data == null) return;
         if (this.reverse) data = !data;
         data ? this.a_enable() : this.a_disable();
     }

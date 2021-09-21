@@ -45,7 +45,6 @@ export default class SetTimeCountDown extends FuckUi {
     private _max: number;
 
     protected onDataChange(data: any) {
-        if (data == null) return;
         let a = Number(data);
         this._countDown = a;
         this._max = a;

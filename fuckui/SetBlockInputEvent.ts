@@ -14,7 +14,6 @@ const { ccclass, menu } = cc._decorator;
 export default class SetBlockInputEvents extends FuckUi {
 
     protected onDataChange(data: any) {
-        if (data == null) return;
         let bie = this.getComponent(cc.BlockInputEvents);
         if (data === true) {
             if (bie == null) bie = this.addComponent(cc.BlockInputEvents);

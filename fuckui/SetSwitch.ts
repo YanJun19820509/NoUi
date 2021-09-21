@@ -32,7 +32,6 @@ export default class SetSwitch extends FuckUi {
     infos: SwitchInfo[] = [];
 
     protected onDataChange(data: any) {
-        if (data == null) return;
         this.infos.forEach(info => {
             info.show(info.condition == data);
         });

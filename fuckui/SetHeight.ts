@@ -19,7 +19,6 @@ export default class SetHeight extends FuckUi {
     max: number = 0;
 
     protected onDataChange(data: any){
-        if (data == null) return;
         this.node.height = this.caculate(data);
     }
 

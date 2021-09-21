@@ -14,7 +14,6 @@ const { ccclass, menu } = cc._decorator;
 export default class SetSize extends FuckUi {
 
     protected onDataChange(data: any) {
-        if (data == null) return;
         let a = [];
         for (let k in data) {
             a.push(data[k]);

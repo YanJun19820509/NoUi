@@ -15,7 +15,6 @@ const { ccclass, menu } = cc._decorator;
 export default class SetColor extends FuckUi {
 
     protected onDataChange(data: any) {
-        if (data == null) return;
         if (typeof data == 'string') {
             this.node.color = no.str2Color(data);
         } else if (data instanceof cc.Color) {

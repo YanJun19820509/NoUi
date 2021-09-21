@@ -14,7 +14,6 @@ const { ccclass, menu } = cc._decorator;
 export default class SetWidth extends SetHeight {
 
     protected onDataChange(data: any) {
-        if (data == null) return;
         this.node.width = this.caculate(data);
     }
 }
