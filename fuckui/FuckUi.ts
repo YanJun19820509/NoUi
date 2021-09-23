@@ -8,7 +8,9 @@
 import { no } from "../no";
 
 const { ccclass, property } = cc._decorator;
-
+/**
+ * 设置ui属性的基类
+ */
 @ccclass
 export default class FuckUi extends cc.Component {
 
