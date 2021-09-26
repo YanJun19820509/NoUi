@@ -12,13 +12,13 @@ const { ccclass, property, menu } = cc._decorator;
  * scrollview滚动到百分比位置
  */
 @ccclass
-@menu('NoUi/ui/SetScrollToPercent(设置scrollView滚动到:number)')
+@menu('NoUi/ui/SetScrollToPercent(设置scrollView滚动到:number(0-1))')
 export default class SetScrollToPercent extends FuckUi {
 
     @property(cc.ScrollView)
     scrollView: cc.ScrollView = null;
 
-    @property({ displayName: '目标位置在可视范围内%', min: 0, max: 1 })
+    @property({ displayName: '目标位置在可视范围内0-1', min: 0, max: 1 })
     at: number = 0.5;
 
     @property({ displayName: '滚动动画时长(秒)', min: 0 })
