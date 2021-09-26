@@ -70,4 +70,8 @@ export default class setProperties extends YJDataWork {
     public a_setScale() {
         this.setValue('scale', 1.5);
     }
+
+    public a_scrollTo(e: any, v: number) {
+        this.setValue('scroll2', v);
+    }
 }
