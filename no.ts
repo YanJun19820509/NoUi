@@ -863,15 +863,15 @@ export namespace no {
      * @param node 
      * @returns cc.Tween
      * @example  data = {
-     *      delay: 1,
-     *      duration: 1,
-     *      to_by: 'to',
-     *      props: {
+     *      delay?: 1,
+     *      duration?: 1,
+     *      to_by?: 'to',
+     *      props?: {
      *          x: 100,
      *          y: 100
      *      },
-     *      easing: 'quadIn',
-     *      repeat: 0
+     *      easing?: 'quadIn',
+     *      repeat?: 0
      * }
      * 如果data为一维数组，则为串行动作；如果为多维数组，则数组间为并行动作，数组内为串行。
      * 默认属性变化为to
