@@ -25,8 +25,8 @@ export class SwitchInfo {
 }
 
 @ccclass
-@menu('NoUi/ui/SetSwitch(设置显隐切换:string)')
-export default class SetSwitch extends FuckUi {
+@menu('NoUi/ui/SetNodesSwitch(设置显隐切换:string)')
+export default class SetNodesSwitch extends FuckUi {
 
     @property(SwitchInfo)
     infos: SwitchInfo[] = [];
