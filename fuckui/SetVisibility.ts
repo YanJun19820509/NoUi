@@ -20,9 +20,7 @@ export default class SetVisibility extends FuckUi {
     reverse: boolean = false;
 
     protected onDataChange(data: any) {
-        if (typeof data == 'boolean') {
-            this.show(data);
-        } else if (data instanceof Object) {
+        if (data instanceof Object) {
             let a = true;
             for (const key in data) {
                 if (Object.prototype.hasOwnProperty.call(data, key)) {
@@ -33,6 +31,8 @@ export default class SetVisibility extends FuckUi {
                 }
             }
             this.show(a);
+        } else {
+            this.show(Boolean(data));
         }
     }
 
