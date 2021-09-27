@@ -10,13 +10,14 @@ import FuckUi from "./FuckUi";
 const { ccclass, property, menu } = cc._decorator;
 
 @ccclass
-@menu('NoUi/ui/SetInteractable(设置按钮交互状态:bool)')
-export default class SetInteractable extends FuckUi {
+@menu('NoUi/ui/SetButtonInteractable(设置按钮交互状态:bool)')
+export default class SetButtonInteractable extends FuckUi {
 
     @property({ displayName: '取反' })
     reverse: boolean = false;
 
     protected onDataChange(data: any) {
+        data = Boolean(data);
         if (this.reverse) data = !data;
         data ? this.a_enable() : this.a_disable();
     }
@@ -27,10 +28,5 @@ export default class SetInteractable extends FuckUi {
 
     public a_disable(): void {
         this.getComponent(cc.Button).interactable = false;
-    }
-
-    public a_setData(e: any, v: any) {
-        v = v || e;
-        this.setData(JSON.parse(v));
     }
 }
