@@ -11,8 +11,8 @@ import FuckUi from "./FuckUi";
 const { ccclass, property, menu } = cc._decorator;
 
 @ccclass
-@menu('NoUi/ui/SetSprite(设置精灵:string)')
-export default class SetSprite extends FuckUi {
+@menu('NoUi/ui/SetSpriteFrame(设置精灵:string)')
+export default class SetSpriteFrame extends FuckUi {
 
     @property(cc.Sprite)
     sprite: cc.Sprite = null;
