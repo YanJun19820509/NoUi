@@ -27,12 +27,9 @@ export default class SetGray extends FuckUi {
     }
 
     protected onDataChange(data: any) {
+        data = Boolean(data);
+        if (this.reverse) data = !data;
         let m = data ? this.grayMaterial : this._normalMaterial;
         this.getComponent(cc.RenderComponent).setMaterial(0, m);
-    }
-
-    public a_setData(e: any, v: any) {
-        v = v || e;
-        this.setData(JSON.parse(v));
     }
 }

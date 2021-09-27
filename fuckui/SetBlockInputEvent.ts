@@ -14,6 +14,7 @@ const { ccclass, menu } = cc._decorator;
 export default class SetBlockInputEvents extends FuckUi {
 
     protected onDataChange(data: any) {
+        data = Boolean(data);
         let bie = this.getComponent(cc.BlockInputEvents);
         if (data === true) {
             if (bie == null) bie = this.addComponent(cc.BlockInputEvents);
@@ -21,10 +22,5 @@ export default class SetBlockInputEvents extends FuckUi {
         } else {
             if (bie != null) bie.enabled = false;
         }
-    }
-
-    public a_setData(e: any, v: any) {
-        v = v || e;
-        this.setData(JSON.parse(v));
     }
 }
