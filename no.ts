@@ -857,21 +857,60 @@ export namespace no {
         return this.weightRandom(a);
     }
 
-    export function getWeekNumber(userCtime: number) {
-        /*
-        根据玩家创建时间获得当前第几周
-        */
-        let number = 1;
-        var date1 = new Date(SysTime.now * 1000),
-            time1 = date1.getTime(),
-            date2 = new Date(userCtime * 1000),
-            time2 = date2.getTime();
-        // 兼容修改时间引起的报错
-        if (time1 < time2) {
-            return number;
+    /**
+     * 解析缓动动效数据
+     * @param data 
+     * @param node 
+     * @returns cc.Tween
+     * @example  data = {
+     *      delay: 1,
+     *      duration: 1,
+     *      to_by: 'to',
+     *      props: {
+     *          x: 100,
+     *          y: 100
+     *      },
+     *      easing: 'quadIn',
+     *      repeat: 0
+     * }
+     * 如果data为一维数组，则为串行动作；如果为多维数组，则数组间为并行动作，数组内为串行。
+     * 默认属性变化为to
+     */
+    export function parseTweenData(data: any, node: cc.Node): cc.Tween<cc.Node> {
+        if (!data || !node) return null;
+
+        if (data instanceof Array) {
+            let a: cc.Tween<cc.Node>[] = [];
+            let isParallel = false;
+            data.forEach(td => {
+                if (td instanceof Array) isParallel = true;
+                a[a.length] = parseTweenData(td, node);
+            });
+
+            let tween = cc.tween(node);
+            if (!isParallel) {
+                tween = tween.sequence.apply(tween, a);
+            } else {
+                tween = tween.parallel.apply(tween, a);
+            }
+            return tween;
+        } else {
+            let tween = cc.tween(node);
+            if (data.delay > 0) {
+                tween = tween.delay(data.delay);
+            }
+            if (data.props != null) {
+                if (data.to_by == 'by') {
+                    tween = tween.by(data.duration, data.props, { easing: data.easing });
+                } else {
+                    tween = tween.to(data.duration, data.props, { easing: data.easing });
+                }
+            }
+            if (data.repeat != undefined) {
+                tween = tween.repeat(data.repeat || 99);
+            }
+            return tween;
         }
-        var d = Math.round((date1.valueOf() - date2.valueOf()) / 86400000);
-        return Math.ceil((d + ((date2.getDay() + 1) - 1)) / 7);
     }
 
     /**基础数据类 */
