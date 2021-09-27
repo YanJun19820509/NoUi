@@ -11,8 +11,8 @@ import FuckUi from "./FuckUi";
 const { ccclass, property, menu } = cc._decorator;
 
 @ccclass
-@menu('NoUi/ui/SetSlider(设置滑块进度:number(0-1))')
-export default class SetSlider extends FuckUi {
+@menu('NoUi/ui/SetSliderProgress(设置滑块进度:number(0-1))')
+export default class SetSliderProgress extends FuckUi {
 
     @property(no.EventHandlerInfo)
     onProgressChange: no.EventHandlerInfo[] = [];
