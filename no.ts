@@ -888,10 +888,24 @@ export namespace no {
             });
 
             let tween = cc.tween(node);
-            if (!isParallel) {
-                tween = tween.sequence.apply(tween, a);
+            if (a.length == 1) {
+                tween = a[0];
             } else {
-                tween = tween.parallel.apply(tween, a);
+                if (!isParallel) {
+                    let c = cc.tween(node);
+                    c = c.sequence(a.shift(), a.shift());
+                    a.forEach(b => {
+                        c = cc.tween(node).sequence(c, b);
+                    });
+                    tween = c;
+                } else {
+                    let c = cc.tween(node);
+                    c = c.parallel(a.shift(), a.shift());
+                    a.forEach(b => {
+                        c = cc.tween(node).parallel(c, b);
+                    });
+                    tween = c;
+                }
             }
             return tween;
         } else {
