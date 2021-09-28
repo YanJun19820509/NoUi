@@ -74,4 +74,20 @@ export default class setProperties extends YJDataWork {
     public a_scrollTo(e: any, v: number) {
         this.setValue('scroll2', v);
     }
+
+    public a_tween() {
+        this.setValue('tween', [{
+            duration: 1,
+            to_by: 'by',
+            props: { x: 100 },
+        }, {
+            duration: 1,
+            to_by: 'by',
+            props: { y: -100 },
+        }, {
+            duration: 1,
+            to_by: 'by',
+            props: { angle: 180 },
+        }]);
+    }
 }
