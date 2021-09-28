@@ -20,6 +20,9 @@ export default class FuckUi extends cc.Component {
     @property({ displayName: '只赋值一次' })
     private once: boolean = false;
 
+    @property({ displayName: '重值忽略', tooltip: '如果输入的数据与上一次相同则忽略' })
+    private saveIgnore: boolean = true;
+
     @property({ displayName: '输出赋值日志' })
     private showValueLog: boolean = false;
 
@@ -28,7 +31,7 @@ export default class FuckUi extends cc.Component {
     public setData(d: any) {
         if (d == null) return;
         let a = JSON.stringify(d);
-        if (a == this._oldData) return;
+        if (a == this._oldData && this.saveIgnore) return;
         this._oldData = a;
         this.logValue(d);
         this.onDataChange(d);
@@ -59,6 +62,10 @@ export default class FuckUi extends cc.Component {
     public a_setData(e: any, v: any) {
         v = v || e;
         this.setData(v);
+    }
+
+    public a_clearData() {
+        this._oldData = null;
     }
 
     /**
