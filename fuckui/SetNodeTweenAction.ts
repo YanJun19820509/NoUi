@@ -25,9 +25,13 @@ export default class SetNodeTweenAction extends FuckUi {
     protected onDataChange(data: any) {
         this.stop();
         no.EventHandlerInfo.execute(this.beforeCall);
-        this._action = no.parseTweenData(data, this.node)?.call(() => {
+        this._action = this.createAction(data)?.call(() => {
             no.EventHandlerInfo.execute(this.endCall);
         }).start();
+    }
+
+    protected createAction(data: any): cc.Tween<cc.Node> {
+        return no.parseTweenData(data, this.node);
     }
 
     private stop() {

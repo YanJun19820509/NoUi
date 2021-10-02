@@ -873,7 +873,7 @@ export namespace no {
      *      easing?: 'quadIn',
      *      repeat?: 0
      * }
-     * 如果data为一维数组，则为串行动作；如果为多维数组，则数组间为并行动作，数组内为串行。
+     * @如果data为一维数组，则为串行动作；如果为多维数组，则数组间为并行动作，数组内为串行。
      * 默认属性变化为to
      */
     export function parseTweenData(data: any, node: cc.Node): cc.Tween<cc.Node> {
@@ -921,7 +921,7 @@ export namespace no {
                 }
             }
             if (data.repeat != undefined) {
-                tween = tween.repeat(data.repeat || 99);
+                tween = tween.repeat(data.repeat || 999);
             }
             return tween;
         }
