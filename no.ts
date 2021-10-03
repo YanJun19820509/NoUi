@@ -1377,7 +1377,7 @@ export namespace no {
             this.preloadFiles(p.bundle, paths, onProgress);
         }
 
-        public loadByUuid<T extends cc.Asset>(requestInfo: { uuid: string, type: typeof cc.Asset, bundle: string }, callback: (file: T) => void) {
+        public loadByUuid<T extends cc.Asset>(requestInfo: { uuid: string, type: typeof cc.Asset }, callback: (file: T) => void) {
             cc.assetManager.loadAny(requestInfo, (e: Error, f: T) => {
                 if (e != null) {
                     no.err(e.stack);
@@ -1599,4 +1599,123 @@ export namespace no {
     }
     /**全局红点管理器 */
     export let hintCenter = new HintCenter();
+
+    /**音频播放类 */
+    class AudioManager {
+
+        private clips: Map<string, cc.AudioClip> = new Map();
+        /**
+         * 背景音乐静音
+         */
+        public isBGMMute = false;
+
+        /**
+         * 音效静音
+         */
+        public isEffectMute = false;
+
+        /**
+         * 播放背景音乐
+         * @param path 音频剪辑路径
+         */
+        public playBGM(path: string): void {
+            if (this.isBGMMute) return;
+            if (this.clips.has(path)) {
+                let c = this.clips.get(path);
+                this._playClip(c, path);
+            } else {
+                this.loadAndPlay(path, true);
+            }
+        }
+
+        /**
+         * 播放音效
+         * @param path 音频剪辑路径
+         */
+        public playEffect(path: string): void {
+            if (this.isEffectMute) return;
+            if (this.clips.has(path)) {
+                let c = this.clips.get(path);
+                this._playClip(c, path, false);
+            } else {
+                this.loadAndPlay(path, false);
+            }
+        }
+
+        /**
+         * 异步播放
+         * @param path 音频剪辑路径
+         * @returns 
+         */
+        public async playOnceAsync(path: string): Promise<void> {
+            if (this.isEffectMute) return;
+            if (this.clips.has(path)) {
+                return new Promise<void>(resolve => {
+                    let clip = this.clips.get(path);
+                    let id = cc.audioEngine.playEffect(clip, false);
+                    cc.audioEngine.setFinishCallback(id, resolve);
+                });
+            }
+            return new Promise<void>(resolve => {
+                this.loadAudioClip(path, clip => {
+                    this.clips.set(path, clip);
+                    let id = cc.audioEngine.playEffect(clip, false);
+                    cc.audioEngine.setFinishCallback(id, resolve);
+                });
+            });
+        }
+
+        /**
+         * 停止背景音乐
+         */
+        public stopBGM() {
+            cc.audioEngine.stopMusic();
+        }
+
+        /**
+         * 播放音频剪辑
+         * @param clip 音频剪辑
+         * @param loop 是否循环，默认true
+         */
+        public playClip(clip: cc.AudioClip, loop = true): void {
+            this._playClip(clip, null, loop);
+        }
+
+        /**
+         * 异步播放音频剪辑
+         * @param clip 音频剪辑
+         */
+        public async playClipOnceAsync(clip: cc.AudioClip): Promise<void> {
+            if (this.isEffectMute) return;
+            return new Promise<void>(resolve => {
+                let id = cc.audioEngine.playEffect(clip, false);
+                cc.audioEngine.setFinishCallback(id, resolve);
+            });
+        }
+
+        public _playClip(clip: cc.AudioClip, path?: string, loop = true): void {
+            if (path && !this.clips.has(path))
+                this.clips.set(path, clip);
+            if (loop) {
+                cc.audioEngine.playMusic(clip, true);
+            } else {
+                cc.audioEngine.playEffect(clip, false);
+            }
+        }
+
+        private loadAndPlay(path: string, loop: boolean): void {
+            this.loadAudioClip(path, clip => {
+                this._playClip(clip, path, loop);
+            });
+        }
+
+        private loadAudioClip(path: string, callback: (clip: cc.AudioClip) => void) {
+            no.assetBundleManager.loadAudio(path, (clip) => {
+                callback && callback(clip);
+            });
+        }
+    }
+
+    /**全局音频播放管理器 */
+    export let audioManager = new AudioManager();
 }
