@@ -5,24 +5,60 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-const {ccclass, property} = cc._decorator;
+import { no } from "../../no";
 
+const { ccclass, property, menu } = cc._decorator;
+
+@ccclass('ListenerInfo')
+export class ListenerInfo {
+    @property()
+    type: string = '';
+    @property(no.EventHandlerInfo)
+    calls: no.EventHandlerInfo[] = [];
+}
 @ccclass
-export default class NewClass extends cc.Component {
+@menu('NoUi/event/YJEventListener(消息监听)')
+export default class YJEventListener extends cc.Component {
 
-    @property(cc.Label)
-    label: cc.Label = null;
+    @property(ListenerInfo)
+    infos: ListenerInfo[] = [];
 
-    @property
-    text: string = 'hello';
+    @property({ displayName: '受节点active影响' })
+    nodeActiveEffect: boolean = true;
 
-    // LIFE-CYCLE CALLBACKS:
+    @property({ displayName: '仅监听一次' })
+    once: boolean = false;
 
-    // onLoad () {}
-
-    start () {
-
+    onLoad() {
+        if (!this.nodeActiveEffect) this.init();
     }
 
-    // update (dt) {}
+    onEnable() {
+        if (this.nodeActiveEffect) this.init();
+    }
+
+    public a_trigger(e: any, type?: string) {
+        this._on(type || e);
+    }
+
+    private init() {
+        this.infos.forEach(info => {
+            if (info.type == '') return;
+            if (this.once) {
+                no.Evn.once(info.type, this._on, this);
+            } else {
+                no.Evn.on(info.type, this._on, this);
+            }
+        });
+    }
+
+    private _on(type: string, ...args: string[]) {
+        for (let i = 0, n = this.infos.length; i < n; i++) {
+            let info = this.infos[i];
+            if (info.type == type) {
+                no.EventHandlerInfo.execute(info.calls, type, args);
+                break;
+            }
+        }
+    }
 }
