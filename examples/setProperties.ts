@@ -47,8 +47,9 @@ export default class setProperties extends YJDataWork {
         this.setValue('gray', true);
     }
 
+    private _n: number = 0;
     public a_setText() {
-        this.setValue('text', 'I Love My Life!');
+        this.setValue('text', String(this._n++));
     }
 
     public a_changeTime() {
