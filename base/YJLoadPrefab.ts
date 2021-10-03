@@ -14,8 +14,6 @@ const { ccclass, property, menu, executeInEditMode } = cc._decorator;
 @executeInEditMode
 export default class YJLoadPrefab extends cc.Component {
 
-    @property
-    bundleName: string = 'Prefab';
     @property({ type: cc.Prefab, editorOnly: true })
     prefab: cc.Prefab = null;
     @property({ editorOnly: true })
@@ -62,7 +60,7 @@ export default class YJLoadPrefab extends cc.Component {
         if (this.prefabUuid == '') return null;
         if (this.loadedNode != null && this.loadedNode.isValid) return this.loadedNode;
         return new Promise<cc.Node>(resolve => {
-            no.assetBundleManager.loadByUuid<cc.Prefab>({ uuid: this.prefabUuid, type: cc.Prefab, bundle: this.bundleName }, (p) => {
+            no.assetBundleManager.loadByUuid<cc.Prefab>({ uuid: this.prefabUuid, type: cc.Prefab}, (p) => {
                 if (p == null) resolve(null);
                 else {
                     this.prefab = p;

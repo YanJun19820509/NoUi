@@ -9,7 +9,7 @@ import FuckUi from "../fuckui/FuckUi";
 
 const { ccclass, property, menu } = cc._decorator;
 
-@ccclass('')
+@ccclass('Json2UiDataInfo')
 export class Json2UiDataInfo {
     @property({ multiline: true })
     json: string = '';
