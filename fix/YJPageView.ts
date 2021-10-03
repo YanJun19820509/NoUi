@@ -8,8 +8,8 @@
 const { ccclass, property, menu } = cc._decorator;
 
 @ccclass
-@menu('NoUi/fix/PageView(修正拖动问题)')
-export default class PageView extends cc.PageView {
+@menu('NoUi/fix/YJPageView(修正拖动问题)')
+export default class YJPageView extends cc.PageView {
 
     @property({ displayName: '触发切换的偏移量' })
     offset: number = 30;

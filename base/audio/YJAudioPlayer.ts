@@ -5,7 +5,7 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import { no } from "../no";
+import { no } from "../../no";
 import YJLoadAudioClip from "./YJLoadAudioClip";
 
 const { ccclass, property, menu } = cc._decorator;

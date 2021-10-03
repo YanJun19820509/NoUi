@@ -5,8 +5,8 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import YJTiledMapDelegate from "../base/delegate/YJTiledMapDelegate";
-import YJTiledMapData from "../base/YJTiledMapData";
+import YJTiledMapData from "../base/tiled/YJTiledMapData";
+import YJTiledMapDelegate from "../base/tiled/YJTiledMapDelegate";
 import { no } from "../no";
 import FuckUi from "./FuckUi";
 

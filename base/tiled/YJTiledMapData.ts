@@ -5,7 +5,7 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import { no } from "../no";
+import { no } from "../../no";
 
 /**
  * tiledmap数据类, 解析tiled的json并缓存相关数据

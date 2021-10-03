@@ -6,7 +6,7 @@
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
 import { YJComponent } from "../YJComponent";
-import YJTiledMapData from "../YJTiledMapData";
+import YJTiledMapData from "./YJTiledMapData";
 
 const { ccclass, menu } = cc._decorator;
 /**
