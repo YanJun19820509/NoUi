@@ -1718,4 +1718,44 @@ export namespace no {
 
     /**全局音频播放管理器 */
     export let audioManager = new AudioManager();
+
+    /**节点管理类 */
+    class NodeTargetManager extends cc.Component {
+
+        private tagetMap: Map<string, any> = new Map();
+
+        /**
+         * 注册节点
+         * @param type 注册类型
+         * @param target 目标
+         */
+        public register(type: string, target: any) {
+            if (type == null || type == '' || target == null) return;
+            this.tagetMap.set(type, target);
+        }
+
+        /**
+         * 获取节点目标
+         * @param type 注册类型
+         * @returns 目标
+         */
+        public get<T>(type: string): T {
+            if (type == null || type == '') return null;
+            if (!this.tagetMap.has(type)) return null;
+            return this.tagetMap.get(type) as T;
+        }
+
+        /**
+         * 移除目标
+         * @param type 注册类型
+         */
+        public remove(type: string) {
+            if (type == null || type == '') return;
+            if (this.tagetMap.has(type)) {
+                this.tagetMap.delete(type);
+            }
+        }
+    }
+    /**全局节点管理类 */
+    export let nodeTargetManager = new NodeTargetManager();
 }
