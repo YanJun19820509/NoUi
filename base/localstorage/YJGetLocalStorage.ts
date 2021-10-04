@@ -19,10 +19,10 @@ export default class YJGetLocalStorage extends cc.Component {
     calls: no.EventHandlerInfo[] = [];
 
     onLoad() {
-        let v: string[] = [];
+        let v = new Object();
         let ks = this.keys.split(',');
         ks.forEach(key => {
-            v[v.length] = localStorage.getItem(key);
+            v[key] = localStorage.getItem(key);
         });
         no.EventHandlerInfo.execute(this.calls, v);
     }
