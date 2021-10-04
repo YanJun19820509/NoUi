@@ -927,6 +927,22 @@ export namespace no {
         }
     }
 
+    /**
+     * 解析url传参
+     * @returns kv对象
+     */
+    export function parseUrlArgs(): any {
+        let query = window.location.search.substring(1);
+        if (query.indexOf('&') == -1) query = window.atob(query)
+        let vars = query.split("&");
+        let args = new Object();
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            args[pair[0]] = pair[1];
+        }
+        return args;
+    }
+
     /**基础数据类 */
     export class Data {
 
