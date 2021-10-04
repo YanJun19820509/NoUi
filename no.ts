@@ -1980,4 +1980,190 @@ export namespace no {
             return this._coefficient * Math.pow(10, this.index);
         }
     }
+
+    /**关系查询 */
+    export class RelationQuery {
+
+        private expMap: Map<string, { k: string, symbol: string, v: any }>;
+        private _tableDatas: any;
+
+        public static get new(): RelationQuery {
+            return new RelationQuery();
+        }
+
+        constructor() {
+            this.expMap = new Map<string, { k: string, symbol: string, v: any }>();
+        }
+
+        /**
+         * 单表查询
+         * @param expression 表达式，如'tableName1[.?]:keyA==1 and keyB != 2 or keyC > 3 and keyD <= (tableName2.keyE:keyF ?= "bb")'
+         * @param tableDatas 表数据，{tableName:data}
+         */
+        public query(expression: string, tableDatas: any): any {
+            let a = this.queryList(expression, tableDatas) || [];
+            return a.length <= 1 ? a[0] : a;
+        }
+
+        public queryList(expression: string, tableDatas: any): any[] {
+            this._tableDatas = tableDatas;
+            expression = this.parseBrackets(expression);
+            let arr = [];
+            let idx = expression.indexOf(':');
+            let table = expression.substring(0, idx == -1 ? expression.length : idx).split('.');
+            let tableData = tableDatas[table[0]];
+            if (idx > -1) {
+                let query = expression.substring(idx + 1);
+                let queryies = this.parseOr(query);
+                forEachKV(tableData, (key, value) => {
+                    if (this.checkConditions(value, queryies))
+                        arr.push(value);
+                    return false;
+                });
+            } else {
+                forEachKV(tableData, (key, value) => {
+                    arr.push(value);
+                    return false;
+                });
+            }
+
+            if (table[1] != null && arr.length >= 1) {
+                let b = [];
+                arr.forEach(a => {
+                    b.push(this.getQueryValue(a, table[1]));
+                });
+                return b;
+            } else if (table[1] == null) {
+                return arr;
+            }
+        }
+
+        private getQueryValue(tableData: any, keys: string): any {
+            keys = keys.replace(new RegExp('\\[|\\]', 'g'), '');
+            let a = keys.split(',');
+            if (a.length == 1) return tableData[a[0]];
+            let b: any = {};
+            a.forEach(k => {
+                b[k] = tableData[k];
+            });
+            return b;
+        }
+
+        private parseOr(str: string): string[][] {
+            let queryies: string[][] = [];
+            let ands = str.split(' or ');
+            ands.forEach(and => {
+                queryies.push(this.parseAnd(and));
+            });
+            return queryies;
+        }
+
+        private parseAnd(str: string): string[] {
+            return str.split(' and ');
+        }
+
+        private parseBrackets(exp: string): string {
+            if (!exp.includes('(') && !exp.includes(')')) return exp;
+            let i1 = exp.indexOf('('),
+                i2 = exp.lastIndexOf(')');
+            let sub = exp.substring(i1 + 1, i2);
+            let a = this.query(sub, this._tableDatas);
+            return exp.replace(exp.substring(i1, i2 + 1), String(a));
+        }
+
+        /**判断或 */
+        private checkConditions(d: any, conditions: string[][]): boolean {
+            if (conditions != null) {
+                let n = conditions.length;
+                for (let i = 0; i < n; i++) {
+                    let condition = conditions[i];
+                    if (this.check(d, condition)) return true;
+                }
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        /**判断与 */
+        private check(d: any, conditions: string[]): boolean {
+            let n = conditions.length;
+            for (let i = 0; i < n; i++) {
+                let condition = conditions[i];
+                let exp = this.condition2Express(condition);
+
+                let b: boolean;
+                switch (exp.symbol) {
+                    case '==':
+                        b = d[exp.k] == exp.v;
+                        break;
+                    case '!=':
+                        b = d[exp.k] != exp.v;
+                        break;
+                    case '>=':
+                        b = d[exp.k] >= exp.v;
+                        break;
+                    case '<=':
+                        b = d[exp.k] <= exp.v;
+                        break;
+                    case '>':
+                        b = d[exp.k] > exp.v;
+                        break;
+                    case '<':
+                        b = d[exp.k] < exp.v;
+                        break;
+                    case '?=':
+                        b = (d[exp.k] as string).includes(exp.v);
+                        break;
+                }
+                if (!b) return false;
+            }
+            return true;
+        }
+
+        private condition2Express(condition: string): { k: string, symbol: string, v: any } {
+            if (this.expMap.has(condition)) return this.expMap.get(condition);
+
+            let r = { k: '', symbol: '', v: null };
+            condition = condition.trim();
+            if (condition.includes('==')) {
+                r.symbol = '==';
+                let a = condition.split('==');
+                r.k = a[0];
+                r.v = a[1];
+            } else if (condition.includes('!=')) {
+                r.symbol = '!=';
+                let a = condition.split('!=');
+                r.k = a[0];
+                r.v = a[1];
+            } else if (condition.includes('>=')) {
+                r.symbol = '>=';
+                let a = condition.split('>=');
+                r.k = a[0];
+                r.v = Number(a[1]);
+            } else if (condition.includes('<=')) {
+                r.symbol = '<=';
+                let a = condition.split('<=');
+                r.k = a[0];
+                r.v = Number(a[1]);
+            } else if (condition.includes('>')) {
+                r.symbol = '>';
+                let a = condition.split('>');
+                r.k = a[0];
+                r.v = Number(a[1]);
+            } else if (condition.includes('<')) {
+                r.symbol = '<';
+                let a = condition.split('<');
+                r.k = a[0];
+                r.v = Number(a[1]);
+            } else if (condition.includes('?=')) {
+                r.symbol = '?=';
+                let a = condition.split('?=');
+                r.k = a[0];
+                r.v = a[1];
+            }
+            this.expMap.set(condition, r);
+            return r;
+        }
+    }
 }
