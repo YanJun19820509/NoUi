@@ -1774,4 +1774,210 @@ export namespace no {
     }
     /**全局节点管理类 */
     export let nodeTargetManager = new NodeTargetManager();
+
+
+    let units = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",];
+    /**用科学计数格式表示的字符串 */
+    export class ScientificString {
+        private _coefficient: number = 0;
+        /**指数 */
+        public index: number = 0;
+
+        constructor(v?: string) {
+            this.value = v;
+        }
+
+        public static get new(): ScientificString {
+            return new ScientificString();
+        }
+
+        public set value(v: string) {
+            if (v == null) return;
+            if (typeof (v) == 'number') {
+                console.error('科学计数不能为数字', v);
+                return;
+            }
+            if (v != null && v != '') {
+                v = v.toUpperCase();
+                if (!v.includes('E')) {
+                    v = Number(v).toExponential().toUpperCase();
+                }
+                let e = v.split('E');
+                this._coefficient = Number(e[0]);
+                this.index = Number(e[1]);
+            }
+        }
+
+        public get value(): string {
+            return `${this._coefficient}E+${this.index}`;
+        }
+
+        /**系数 */
+        public get coefficient(): number {
+            return this._coefficient;
+        }
+
+        /**系数 */
+        public set coefficient(v: number) {
+            if (v == 0 || v == null) {
+                this._coefficient = 0;
+                this.index = 0;
+            } else {
+                let e = v.toExponential().toUpperCase().split('E');
+                this._coefficient = Number(e[0]);
+                this.index += Number(e[1]);
+            }
+        }
+
+        /**
+         * 复制
+         */
+        public get clone(): ScientificString {
+            let a = ScientificString.new;
+            a._coefficient = this.coefficient;
+            a.index = this.index;
+            return a;
+        }
+
+        /**
+         * 复制成目标
+         */
+        public cloneTo(other: ScientificString) {
+            if (other == null) return;
+            this._coefficient = other._coefficient;
+            this.index = other.index;
+        }
+
+        /**加 */
+        public add(other: ScientificString): void {
+            if (other == null) return;
+            if (this.index == other.index) {
+                this.coefficient += other._coefficient;
+            } else {
+                this.coefficient += other._coefficient * Math.pow(10, other.index - this.index);
+            }
+        }
+
+        /**加 */
+        public static add(s1: string, s2: string, out?: ScientificString): ScientificString {
+            out = out || new ScientificString();
+            out.value = s1;
+            let sc2 = new ScientificString(s2);
+            out.add(sc2);
+            return out;
+        }
+
+        /**减 */
+        public minus(other: ScientificString): void {
+            if (other == null) return;
+            if (this.index == other.index) {
+                this.coefficient -= other._coefficient;
+            } else {
+                this.coefficient -= other._coefficient * Math.pow(10, other.index - this.index);
+            }
+        }
+
+        /**减 */
+        public static minus(s1: string, s2: string, out?: ScientificString): ScientificString {
+            out = out || new ScientificString();
+            out.value = s1;
+            let s = new ScientificString(s2);
+            out.minus(s);
+            return out;
+        }
+
+        /**乘 */
+        public mul(other: ScientificString): void {
+            if (other == null) return;
+            this.coefficient *= other._coefficient;
+            this.index += other.index;
+        }
+
+        /**乘 */
+        public static mul(s1: string, s2: string, out?: ScientificString): ScientificString {
+            out = out || new ScientificString();
+            out.value = s1;
+            let s = new ScientificString(s2);
+            out.mul(s);
+            return out;
+        }
+
+        /**除 */
+        public div(other: ScientificString): void {
+            if (other == null) return;
+            this.coefficient /= other._coefficient;
+            this.index -= other.index;
+        }
+
+        /**除 */
+        public static div(s1: string, s2: string, out?: ScientificString): ScientificString {
+            out = out || new ScientificString();
+            out.value = s1;
+            let s = new ScientificString(s2);
+            out.div(s);
+            return out;
+        }
+
+        /**
+         * 值比较
+         * @param other 
+         * @returns 负值：小于，0：等于，正值：大于
+         */
+        public compareTo(other: ScientificString): number {
+            if (other == null) return 1;
+            if (this.index == other.index) {
+                return this.coefficient - other.coefficient;
+            } else {
+                return this.index > other.index ? 1 : -1;
+            }
+        }
+
+        /**
+         * 值比较
+         * @param s1 
+         * @param s2 
+         * @returns 负值：小于，0：等于，正值：大于
+         */
+        public static compareTo(s1: string, s2: string): number {
+            if (s1 == null) return -1;
+            if (s2 == null) return 1;
+            let e1 = new ScientificString(s1),
+                e2 = new ScientificString(s2);
+            return e1.compareTo(e2);
+        }
+
+        /**带单位的值 */
+        public get unitValue(): string {
+            if (this.index < 3) {
+                return `${Math.floor(this._coefficient * Math.pow(10, this.index))}`;
+            }
+            let a = Math.floor(this.index / 3),
+                b = this.index % 3,
+                u: string;
+            if (a < 4) {
+                u = ["k", "m", "b"][a - 1];
+            } else {
+                u = this.getUnit(a - 3);
+            }
+            return `${Math.floor(this._coefficient * Math.pow(10, b + 2)) / 100}${u}`;
+        }
+
+        public getUnit(a: number): string {
+            let u: string;
+            let len = units.length;
+            a -= 1;
+            if (a < len)
+                u = units[a];
+            else {
+                let c = Math.floor(a / len);
+                u = units[a % len];
+                u = this.getUnit(c) + u;
+            }
+            return u;
+        }
+
+        public get numberValue(): number {
+            return this._coefficient * Math.pow(10, this.index);
+        }
+    }
 }
