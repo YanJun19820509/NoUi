@@ -1022,6 +1022,88 @@ export namespace no {
         }
     }
 
+    /**
+     * 数据缓存类，包括localstorage、json配置、全局临时数据
+     */
+    class DataCache extends cc.SystemEvent {
+        private _json: Data;
+        private _tmp: Data;
+
+        constructor() {
+            super();
+            this._json = new Data();
+            this._tmp = new Data();
+        }
+
+        /**
+         * 获取本地数据
+         * @param key 
+         */
+        public getLocal(key: string): any {
+            let a = localStorage.getItem(key);
+            if (a == null) return null;
+            return JSON.parse(a);
+        }
+        /**
+         * 写入本地数据
+         * @param key 
+         * @param value 
+         */
+        public setLocal(key: string, value: any): void {
+            localStorage.setItem(key, JSON.stringify(value));
+            this.emit(key, value);
+        }
+
+        /**
+         * 获取配置数据
+         * @param path 如a.b.c 或[a,b,c]
+         */
+        public getJSON(path?: string | string[]): any {
+            return this._json.get(path);
+        }
+
+        /**
+         * 写入配置数据
+         * @param json
+         */
+        public setJSON(json: Object): void {
+            forEachKV(json, (key, value) => {
+                this._json.set(key, value);
+                return false;
+            });
+        }
+        /**
+         * 获取全局临时数据
+         * @param key 
+         */
+        public getTmpData(key: string): any {
+            return { [key]: this.getTmpValue(key) };
+        }
+        /**
+         * 获取全局临时数据值
+         * @param key 
+         */
+        public getTmpValue(key: string): any {
+            return this._tmp.get(key);
+        }
+        /**
+         * 写入全局临时数据
+         * @param key 
+         * @param value 
+         */
+        public setTmpValue(key: string, value: any): void {
+            if (value == null) {
+                this._tmp.delete(key);
+            } else {
+                this._tmp.set(key, clone(value));
+            }
+            this.emit(key, value);
+        }
+    }
+
+    /**全局数据缓存单例 */
+    export let dataCache = new DataCache();
+
 
     /**资源管理 */
 
@@ -1997,19 +2079,19 @@ export namespace no {
 
         /**
          * 单表查询
-         * @param expression 表达式，如'tableName1[.?]:keyA==1 and keyB != 2 or keyC > 3 and keyD <= (tableName2.keyE:keyF ?= "bb")'
+         * @param expression 表达式，如'tableName1[.?] where keyA==1 and keyB != 2 or keyC > 3 and keyD <= (tableName2.keyE:keyF ?= "bb")'
          * @param tableDatas 表数据，{tableName:data}
          */
-        public query(expression: string, tableDatas: any): any {
-            let a = this.queryList(expression, tableDatas) || [];
+        public select(expression: string, tableDatas: any): any {
+            let a = this.selectList(expression, tableDatas) || [];
             return a.length <= 1 ? a[0] : a;
         }
 
-        public queryList(expression: string, tableDatas: any): any[] {
+        public selectList(expression: string, tableDatas: any): any[] {
             this._tableDatas = tableDatas;
             expression = this.parseBrackets(expression);
             let arr = [];
-            let idx = expression.indexOf(':');
+            let idx = expression.indexOf(' where ');
             let table = expression.substring(0, idx == -1 ? expression.length : idx).split('.');
             let tableData = tableDatas[table[0]];
             if (idx > -1) {
@@ -2067,7 +2149,7 @@ export namespace no {
             let i1 = exp.indexOf('('),
                 i2 = exp.lastIndexOf(')');
             let sub = exp.substring(i1 + 1, i2);
-            let a = this.query(sub, this._tableDatas);
+            let a = this.select(sub, this._tableDatas);
             return exp.replace(exp.substring(i1, i2 + 1), String(a));
         }
 
