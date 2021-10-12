@@ -36,6 +36,16 @@ export default class SetAnimation extends FuckUi {
 
     private needReleaseClips: cc.AnimationClip[] = [];
 
+    onDisable() {
+        let ani = this.getComponent(cc.Animation);
+        let n = this.needReleaseClips.length;
+        while (n-- > 0) {
+            let clip = this.needReleaseClips.shift();
+            ani.removeClip(clip, true)
+            no.assetBundleManager.decRef(clip);
+        }
+    }
+
     protected async onDataChange(data: any) {
         let ani = this.getComponent(cc.Animation);
         await no.waitFor(() => { return ani.enabled; });
@@ -48,7 +58,7 @@ export default class SetAnimation extends FuckUi {
                 await this._loadClip(path, name);
             }
             this._play(name, repeat);
-        } 
+        }
     }
 
     private async _loadClip(path: string, name: string): Promise<void> {

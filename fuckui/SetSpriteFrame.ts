@@ -23,6 +23,8 @@ export default class SetSpriteFrame extends FuckUi {
 
     protected onDataChange(data: any) {
         if (this.sprite == null) return;
+        no.assetBundleManager.decRef(this.sprite.spriteFrame);
+        this.sprite.spriteFrame = null;
         no.assetBundleManager.loadSprite(String(data), spriteFrame => {
             this.sprite.spriteFrame = spriteFrame;
         });

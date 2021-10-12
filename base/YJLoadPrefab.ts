@@ -33,7 +33,6 @@ export default class YJLoadPrefab extends cc.Component {
 
     onDestroy() {
         if (CC_EDITOR) return;
-        no.assetBundleManager.decRef(this.prefab);
         this.loadedNode?.destroy();
     }
 
@@ -60,19 +59,20 @@ export default class YJLoadPrefab extends cc.Component {
         if (this.prefabUuid == '') return null;
         if (this.loadedNode != null && this.loadedNode.isValid) return this.loadedNode;
         return new Promise<cc.Node>(resolve => {
-            no.assetBundleManager.loadByUuid<cc.Prefab>({ uuid: this.prefabUuid, type: cc.Prefab}, (p) => {
+            no.assetBundleManager.loadByUuid<cc.Prefab>({ uuid: this.prefabUuid, type: cc.Prefab }, (p) => {
                 if (p == null) resolve(null);
                 else {
-                    this.prefab = p;
                     this.loadedNode = cc.instantiate(p);
+                    this.loaded = true;
+                    no.assetBundleManager.decRef(p);
                     resolve(this.loadedNode);
                 }
-                this.loaded = true;
             });
         });
     }
 
     public clone(): cc.Node {
+        if (!this.loadedNode) return null;
         return cc.instantiate(this.loadedNode);
     }
 

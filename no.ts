@@ -1128,9 +1128,6 @@ export namespace no {
             //用于设置每帧发起的最大请求数，从而均摊发起请求的 CPU 开销，避免单帧过于卡顿
             cc.assetManager.downloader.maxRequestsPerFrame = 10;
             cc.assetManager.downloader.maxRetryCount = 10;
-            setInterval(() => {
-                this.releaseAssets();
-            }, 60000);
         }
 
         /**
@@ -1486,32 +1483,11 @@ export namespace no {
         }
 
         public addRef(asset: cc.Asset): void {
-            // if (asset == null) return;
-            // asset['myRefCount'] = asset['myRefCount'] || 0;
-            // asset['myRefCount']++;
+            asset?.addRef();
         }
 
         public decRef(asset: cc.Asset): void {
-            // if (asset == null || !asset.isValid) return;
-            // asset['myRefCount'] = asset['myRefCount'] || 0;
-            // asset['myRefCount']--;
-            // if (asset['myRefCount'] == 0) {
-            //     asset['lastTime'] = no.timestamp();
-            //     no.addToArray(this.needReleaseAssets, asset);
-            // }
-        }
-
-        private releaseAssets() {
-            let t = no.timestamp();
-            for (let n = this.needReleaseAssets.length, i = n - 1; i >= 0; i--) {
-                let asset = this.needReleaseAssets[i];
-                if (asset['myRefCount'] == 0 && t - asset['lastTime'] > 60) {
-                    cc.assetManager.releaseAsset(asset);
-                    this.needReleaseAssets.splice(i, 1);
-                } else if (asset['myRefCount'] > 0) {
-                    this.needReleaseAssets.splice(i, 1);
-                }
-            }
+            asset?.decRef();
         }
 
         /**

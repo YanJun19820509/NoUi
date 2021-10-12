@@ -26,6 +26,7 @@ export default class SetTiledMap extends FuckUi {
         no.assetBundleManager.loadJSON(data, (jsonAsset: cc.JsonAsset) => {
             this.mapData = new YJTiledMapData(jsonAsset.json);
             this.initMap();
+            no.assetBundleManager.decRef(jsonAsset);
         });
     }
 
