@@ -32,7 +32,6 @@ export default class SetList extends FuckUi {
     private listItems: cc.Node[] = [];
     private viewSize: cc.Size;
     private itemSize: cc.Size;
-    private itemPanelNode: cc.Node;
     private isVertical: boolean;
     private content: cc.Node;
     /**
