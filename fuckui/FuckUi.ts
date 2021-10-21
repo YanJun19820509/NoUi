@@ -5,6 +5,7 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
+import YJFuckUiRegister from "../base/YJFuckUiRegister";
 import { no } from "../no";
 
 const { ccclass, property } = cc._decorator;
@@ -13,6 +14,9 @@ const { ccclass, property } = cc._decorator;
  */
 @ccclass
 export default class FuckUi extends cc.Component {
+
+    @property({ type: YJFuckUiRegister })
+    register: YJFuckUiRegister = null;
 
     @property({ displayName: '绑定数据的keys', tooltip: '用.表示key的层级关系，用,分隔多个key' })
     private bind_keys: string = '';
@@ -27,6 +31,11 @@ export default class FuckUi extends cc.Component {
     private showValueLog: boolean = false;
 
     private _oldData: any;
+
+    onLoad() {
+        if (CC_EDITOR) return;
+        this.register?.register(this);
+    }
 
     public setData(d: any) {
         if (d == null) return;

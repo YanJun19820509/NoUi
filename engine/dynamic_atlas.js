@@ -380,7 +380,7 @@ let mixEngine = function () {
 
     cc.js.mixin(cc.Assembler2D.prototype, {
         packToDynamicAtlas(comp, frame) {
-            if (CC_TEST) return;
+            if (CC_TEST || !frame) return;
             if (cc.dynamicAtlasManager) {
                 if (comp instanceof cc.Label) {
                     if (comp.string == '') return;

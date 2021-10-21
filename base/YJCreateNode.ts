@@ -17,6 +17,8 @@ export default class YJCreateNode extends cc.Component {
 
     @property(YJLoadPrefab)
     loadPrefab: YJLoadPrefab = null;
+    @property(cc.Node)
+    tempNode: cc.Node = null;
 
     @property(cc.Node)
     target: cc.Node = null;
@@ -45,9 +47,11 @@ export default class YJCreateNode extends cc.Component {
         }
 
         if (a == null) {
-            let node = await this.loadPrefab.loadPrefab();
+            let node = this.tempNode || await this.loadPrefab.loadPrefab();
             if (node == null) return null;
             a = cc.instantiate(node);
+            a.parent = this.target;
+            a.active = true;
             this._recycleType = node.getComponent(YJCacheObject)?.recycleType;
         }
         return a;

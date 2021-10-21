@@ -8,21 +8,30 @@
 import FuckUi from "../fuckui/FuckUi";
 import { no } from "../no";
 import { YJComponent } from "./YJComponent";
+import YJFuckUiRegister from "./YJFuckUiRegister";
 
-const { ccclass, property, menu } = cc._decorator;
+const { ccclass, property, menu, requireComponent } = cc._decorator;
 
 @ccclass
 @menu('NoUi/base/YJDataWork(数据处理基类)')
+@requireComponent(YJFuckUiRegister)
 export default class YJDataWork extends YJComponent {
 
     @property(cc.Node)
     target: cc.Node = null;
+    @property(YJFuckUiRegister)
+    register: YJFuckUiRegister = null;
+
+    private _ready: boolean = false;
 
     private _data: no.Data = new no.Data();
-    private _data2ui: object;
 
     onLoad() {
         if (this.target == null) this.target = this.node;
+    }
+
+    start() {
+        this._ready = true;
         this.init();
     }
 
@@ -45,26 +54,13 @@ export default class YJDataWork extends YJComponent {
         this.onValueChange(key, value);
     }
 
-    private findAllFunckUis() {
-        this._data2ui = {};
-        let a = this.target.getComponentsInChildren(FuckUi);
-        a.forEach(ui => {
-            let keys = ui.bindKeys;
-            keys.forEach(key => {
-                this._data2ui[key] = this._data2ui[key] || [];
-                this._data2ui[key][this._data2ui[key].length] = ui;
-            });
-        });
-    }
-
-    private onValueChange(key: string, value: any) {
-        if (this._data2ui == null)
-            this.findAllFunckUis();
-        let ui: FuckUi[] = this._data2ui[key];
+    private async onValueChange(key: string, value: any) {
+        await no.waitFor(() => { return this._ready; });
+        let ui: FuckUi[] = this.register?.getUis(key) || [];
         this.setUiData(ui, value);
         if (value instanceof Array) {
             value.forEach((v, i) => {
-                let ui: FuckUi[] = this._data2ui[`${key}.${i}`];
+                let ui: FuckUi[] = this.register?.getUis(`${key}.${i}`) || [];
                 this.setUiData(ui, v);
             });
         } else if (value instanceof Object) {
