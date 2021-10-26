@@ -22,22 +22,36 @@ class Rect {
         this.id = `${x}_${y}_${w}_${h}`;
     }
 
-    public cut(w: number, h: number): Rect[] {
+    public cut(x: number, y: number, w: number, h: number): Rect[] {
         let r = this.rect;
-        return [
-            Rect.new(r.x + w + _padding, r.y, r.width - w - _padding, h),
-            Rect.new(r.x, r.y + h + _padding, r.width, r.height - h - _padding),
-            Rect.new(r.x, r.y + h + _padding, w, r.height - h - _padding),
-            Rect.new(r.x + w + _padding, r.y, r.width - w - _padding, r.height)
-        ];
+        let a: Rect[] = [];
+        if (x > r.x)
+            a[a.length] = Rect.new(r.x, r.y, x - r.x - _padding, r.height);
+        else if (y > r.y)
+            a[a.length] = Rect.new(r.x, r.y, r.width, y - r.y - _padding);
+
+        a[a.length] = Rect.new(r.x, y + h + _padding, r.width, r.height - h + r.y - y - _padding);
+        a[a.length] = Rect.new(x + w + _padding, r.y, r.width - w + r.x - x - _padding, r.height);
+
+        return a;
     }
 
     public isEqual(x: number, y: number, w: number, h: number): boolean {
         return this.id == `${x}_${y}_${w}_${h}`;
     }
 
+    public equalTo(r: Rect): boolean {
+        if (!r) return false;
+        return this.id == r.id;
+    }
+
     public includes(w: number, h: number): boolean {
         return this.rect.width >= w && this.rect.height >= h;
+    }
+
+    public contains(r: Rect): boolean {
+        if (!r) return false;
+        return this.rect.containsRect(r.rect);
     }
 
     public saveOrigin(origin: cc.Vec2): boolean {
@@ -54,15 +68,27 @@ export class MaxRects {
         this._width = width;
         this._height = height;
         _padding = padding;
-        this._addRect(0, 0, width, height);
+        this._addRect(_padding, _padding, width - _padding, height - _padding);
+    }
+
+    public get lastRects(): cc.Rect[] {
+        let a: cc.Rect[] = [];
+        this._rects.forEach(r => {
+            a[a.length] = r.rect;
+        });
+        return a;
     }
 
     public find(w: number, h: number): cc.Vec2 {
         let idx = -1;
+        this._rects.sort((a, b) => {
+            return (a.rect.width * a.rect.height - b.rect.width * b.rect.height) || (a.rect.y - b.rect.y) || (a.rect.x - b.rect.x);
+        });
         for (let i = 0, n = this._rects.length; i < n; i++) {
             let r = this._rects[i];
             if (r.includes(w, h)) {
-                if (idx == -1 || this._rects[idx].includes(r.rect.width, r.rect.height)) { idx = i; }
+                idx = i;
+                break;
             }
         }
         if (idx == -1) return null;
@@ -73,8 +99,8 @@ export class MaxRects {
                 use = r;
             }
         }
-        let cuts = use.cut(w, h);
-        this._mergeRects(cuts);
+        let cuts = use.cut(use.rect.x, use.rect.y, w, h);
+        this._mergeRects(this._createRect(use.rect.origin.x, use.rect.origin.y, w, h), cuts);
         return use.rect.origin;
     }
 
@@ -88,12 +114,56 @@ export class MaxRects {
         }
     }
 
+    private _createRect(x: number, y: number, w: number, h: number): Rect {
+        if (w < 0 || h < 0) return null;
+        let r = Rect.new(x, y, w, h);
+        return r;
+    }
+
     private _addRect(x: number, y: number, w: number, h: number) {
-        let r = Rect.new(x + _padding, y + _padding, w - _padding, h - _padding);
+        let r = this._createRect(x, y, w, h);
         this._rects[this._rects.length] = r;
     }
 
-    private _mergeRects(arr: Rect[]) {
+    private _intersectsRect(r1: Rect, r2: Rect): boolean {
+        let x: number = r1.rect.x, y: number = r1.rect.y, w: number = r1.rect.width, h: number = r1.rect.height, w1 = r1.rect.width, h1: number = r1.rect.height;
+        if (r2.rect.x <= r1.rect.x) {
+            x = r2.rect.xMax + _padding
+            w = r1.rect.width + r1.rect.x - x;
+            h1 = r2.rect.yMax - r1.rect.yMax - _padding;
+        }
+        if (r2.rect.y <= r1.rect.y) {
+            y = r2.rect.yMax + _padding;
+            h = r1.rect.height + r1.rect.y - y;
+            w1 = r2.rect.x - r1.rect.x - _padding;
+        }
+        let a = this._createRect(r1.rect.x, r1.rect.y, w1, h1);
+        if (w > 0 && h > 0) {
+            r1.set(x, y, w, h);
+        }
+        if (a) {
+            for (let i = 0, n = this._rects.length; i < n; i++) {
+                if (this._rects[i].contains(a)) {
+                    a = null;
+                    break;
+                }
+            }
+        }
+        if (a)
+            this._rects[this._rects.length] = a;
+
+        return w > 0 && h > 0;
+    }
+
+    private _mergeRects(use: Rect, arr: Rect[]) {
+        for (let i = this._rects.length - 1; i >= 0; i--) {
+            if (use.contains(this._rects[i])) {
+                this._rects.splice(i, 1);
+            } else if (this._rects[i].rect.intersects(use.rect)) {
+                let a = this._rects.splice(i, 1)[0];
+                this._rects = this._rects.concat(a.cut(use.rect.x, use.rect.y, use.rect.width, use.rect.height));
+            }
+        }
         for (let i = arr.length - 1; i >= 0; i--) {
             let a = arr[i];
             for (let j = this._rects.length - 1; j >= 0; j--) {
@@ -101,34 +171,7 @@ export class MaxRects {
                 if (b.rect.containsRect(a.rect)) {
                     arr.splice(i, 1);
                 } else if (a.rect.containsRect(b.rect)) {
-                    this._rects.slice(j, 1);
-                } else if (b.rect.intersects(a.rect)) {
-                    if (a.rect.xMax >= b.rect.xMax && a.rect.yMax >= b.rect.yMax) {
-                        this._rects.slice(j, 1);
-                    } else {
-                        let x: number = b.rect.x, y: number = b.rect.y, w: number = b.rect.width, h: number = b.rect.height;
-                        if (a.rect.x < b.rect.x) {
-                            x = a.rect.xMax + _padding
-                            w = b.rect.width + b.rect.x - x;
-                        }
-                        if (a.rect.y < b.rect.y) {
-                            y = a.rect.yMax + _padding;
-                            h = b.rect.height + b.rect.x - y;
-                        }
-                        b.set(x, y, w, h);
-                    }
-                } else if (a.rect.xMax == b.rect.x - _padding || b.rect.xMax == a.rect.x - _padding) {
-                    let x = Math.min(a.rect.x, b.rect.x);
-                    let y = Math.max(a.rect.y, b.rect.y);
-                    let w = Math.max(a.rect.xMax, b.rect.xMax);
-                    let h = Math.min(a.rect.height, b.rect.height);
-                    this._addRect(x, y, w, h);
-                } else if (a.rect.yMax == b.rect.y - _padding || b.rect.yMax == a.rect.y - _padding) {
-                    let x = Math.max(a.rect.x, b.rect.x);
-                    let y = Math.min(a.rect.y, b.rect.y);
-                    let w = Math.min(a.rect.width, b.rect.width);
-                    let h = Math.max(a.rect.yMax, b.rect.yMax);
-                    this._addRect(x - _padding, y - _padding, w - _padding, h - _padding);
+                    this._rects.splice(j, 1);
                 }
             }
         }
