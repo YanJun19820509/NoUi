@@ -28,6 +28,9 @@ export default class YJDataWork extends YJComponent {
 
     onLoad() {
         if (this.target == null) this.target = this.node;
+        this.register.onNewUiRegister = (key: string, ui: FuckUi) => {
+            this.setUiData([ui], this.getValue(key));
+        };
     }
 
     start() {

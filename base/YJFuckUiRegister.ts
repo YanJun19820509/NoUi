@@ -14,11 +14,14 @@ export default class YJFuckUiRegister extends cc.Component {
 
     private _data2ui: object = {};
 
+    public onNewUiRegister: (key: string, ui: FuckUi) => void;
+
     public register(ui: FuckUi): void {
         let keys = ui.bindKeys;
         keys.forEach(key => {
             this._data2ui[key] = this._data2ui[key] || [];
             this._data2ui[key][this._data2ui[key].length] = ui;
+            this.onNewUiRegister?.(key, ui);
         });
     }
 
