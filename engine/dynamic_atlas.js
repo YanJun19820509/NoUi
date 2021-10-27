@@ -1,21 +1,22 @@
-const MaxRects = require('./MaxRects')
 //drawcall优化，对引擎相关代码的扩充或修改
+const MaxRects = require('.././SubpackageScript/framework/res/MaxRects');
+
 let mixEngine = function () {
     let _curTmpAtlas = null;
     let _tmpAtlases = [];
     let _openEnableTmp = true;
     let _debugNode = null;
-    let _textureSize = 2048;
+    let _textureSize = 1024;
     let _maxFrameSize = 512;
     const space = 2;
     let o_insertSpriteFrame = cc.dynamicAtlasManager.insertSpriteFrame;
     cc.js.mixin(cc.dynamicAtlasManager, {
         insertSpriteFrame(spriteFrame, comp) {
             if (CC_EDITOR || !spriteFrame || !spriteFrame._texture || !spriteFrame._texture._texture) return null;
-            if (_curTmpAtlas && spriteFrame && spriteFrame._rect.width <= cc.winSize.width && spriteFrame._rect.height <= 400) {
+            if (_curTmpAtlas && spriteFrame && spriteFrame._rect.width <= cc.winSize.width && spriteFrame._rect.height <= 700) {
                 return this._insertTmpSpriteFrame(spriteFrame, comp);
             }
-            return o_insertSpriteFrame(spriteFrame);
+            return null;//o_insertSpriteFrame(spriteFrame);
         },
         showDebug: CC_DEBUG && function (show) {
             if (show) {
@@ -83,9 +84,10 @@ let mixEngine = function () {
                 }
             }
         },
-        setTmpAtlas(name) {
+        setTmpAtlas(name, size) {
+            size = size || 1;
             if (!_openEnableTmp) return;
-            let atlas = new this.Atlas(_textureSize, _textureSize);
+            let atlas = new this.Atlas(_textureSize * size, _textureSize * size);
             atlas._texture._id = name;
             _curTmpAtlas = atlas;
             _tmpAtlases[_tmpAtlases.length] = atlas;
@@ -110,7 +112,7 @@ let mixEngine = function () {
             // setTimeout(() => {
             atlas.destroy();
             atlas = null;
-            // }, 100);
+            // }, 50);
         },
 
         tmpAtlasByName(name) {
@@ -136,7 +138,8 @@ let mixEngine = function () {
 
         _insertTmpSpriteFrame(spriteFrame, comp) {
             // let atlas = this.tmpAtlasByName(spriteFrame['_tmpAtlasId']);
-            // if (atlas && spriteFrame._texture._id == atlas._texture._id) return null;
+            if (spriteFrame._texture._id == _curTmpAtlas._texture._id) return null;
+            if (!spriteFrame._original && !spriteFrame._texture._texture) return null;
 
             // for (let i = 0, n = _tmpAtlases.length; i < n; i++) {
             //     atlas = _tmpAtlases[i];
@@ -186,8 +189,8 @@ let mixEngine = function () {
             if (!this._dynamicTextureRect) {
                 this._dynamicTextureRect = {};
             }
-            if (!this._maxRects) {
-                this._maxRects = new MaxRects.MaxRects(this._width, this._height);
+            if (!this._maxRect) {
+                this._maxRect = new MaxRects.MaxRects(this._width, this._height);
             }
             let _uuid;
             if (spriteFrame instanceof cc.SpriteFrame)
@@ -211,10 +214,11 @@ let mixEngine = function () {
             let rect = spriteFrame._rect;
             let isRotated = spriteFrame.isRotated ? spriteFrame.isRotated() : false;
 
+
             let width = isRotated ? rect.height : rect.width,
                 height = isRotated ? rect.width : rect.height;
 
-            let p = this._maxRects.find(width, height);
+            let p = this._maxRect.find(width, height);
             if (!p) return null;
             let x = p.x, y = p.y;
             // if ((this._x + width + space) > this._width) {
@@ -230,6 +234,7 @@ let mixEngine = function () {
             //     this._nexty = this._y;
             //     return null;
             // }
+            // let x = this._x, y = this._y;
 
             spriteFrame['_tmpAtlasId'] = this._texture._id;
             if (spriteFrame instanceof cc.SpriteFrame) {
@@ -256,7 +261,7 @@ let mixEngine = function () {
             // this._x += width + space;
 
             this._innerSpriteFrames.push(spriteFrame);
-            cc.dynamicAtlasManager.updateAtlasComp(_uuid);
+            // cc.dynamicAtlasManager.updateAtlasComp(_uuid, this._texture._id);
             return frame;
         },
 
@@ -345,6 +350,7 @@ let mixEngine = function () {
         },
 
         reset() {
+            console.error(this._maxRect._rects.length);
             this._x = space;
             this._y = space;
             this._nexty = space;
@@ -355,14 +361,15 @@ let mixEngine = function () {
                 if (!frame.isValid) {
                     continue;
                 }
-                frame['_tmpAtlasId'] = null;
+                delete frame['_tmpAtlasId'];
                 frame._resetDynamicAtlasFrame();
             }
 
             if (this._innerComponentes) {
                 for (const key in this._innerComponentes) {
                     if (Object.hasOwnProperty.call(this._innerComponentes, key)) {
-                        this.updateComp(key);
+                        // this.updateComp(key);
+                        cc.dynamicAtlasManager.updateAtlasComp(key, this._texture._id);
                     }
                 }
             }
@@ -374,14 +381,15 @@ let mixEngine = function () {
         updateComp(uuid) {
             if (!this._innerComponentes) return;
             let comps = this._innerComponentes[uuid] || [];
-            comps.forEach(comp => {
-                if (comp.isValid && comp.enabledInHierarchy) {
-                    if (comp instanceof cc.SpriteFrame)
+            for (let i = 0, n = comps.length; i < n; i++) {
+                let comp = comps[i];
+                if (comp.isValid) {
+                    if (comp instanceof cc.Sprite)
                         comp._assembler.updateRenderData(comp);
                     else
                         comp.setVertsDirty();
                 }
-            });
+            }
         }
     });
 
@@ -389,7 +397,7 @@ let mixEngine = function () {
         packToDynamicAtlas(comp, frame) {
             if (CC_TEST || !frame) return;
             if (cc.dynamicAtlasManager) {
-                if (comp instanceof cc.Label) {
+                if (comp instanceof cc.Label && !(frame instanceof cc.SpriteFrame)) {
                     if (comp.string == '') return;
                     frame._texture._uuid = comp.string + "_" + comp.node.color + "_" + comp.fontSize + comp.fontFamily;
                 }
@@ -429,7 +437,6 @@ if (!CC_EDITOR && CC_DEBUG) {
     let a = setInterval(function () {
         if (cc.Assembler2D) {
             mixEngine();
-            cc.dynamicAtlasManager['setTmpAtlas']('1');
             clearInterval(a);
         }
     }, 20);

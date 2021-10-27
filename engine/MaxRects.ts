@@ -3,6 +3,7 @@
 // Learn Attribute:
 //  - https://docs.cocos.com/creator/manual/en/scripting/reference/attributes.html
 // Learn life-cycle callbacks:
+
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 let _padding: number;
 class Rect {
@@ -25,14 +26,16 @@ class Rect {
     public cut(x: number, y: number, w: number, h: number): Rect[] {
         let r = this.rect;
         let a: Rect[] = [];
-        if (x > r.x)
+        if (x > r.x + _padding)
             a[a.length] = Rect.new(r.x, r.y, x - r.x - _padding, r.height);
-        else if (y > r.y)
+        else if (y > r.y + _padding)
             a[a.length] = Rect.new(r.x, r.y, r.width, y - r.y - _padding);
 
-        a[a.length] = Rect.new(r.x, y + h + _padding, r.width, r.height - h + r.y - y - _padding);
-        a[a.length] = Rect.new(x + w + _padding, r.y, r.width - w + r.x - x - _padding, r.height);
+        let r1 = Rect.new(r.x, y + h + _padding, r.width, r.height - h + r.y - y - _padding);
+        let r2 = Rect.new(x + w + _padding, r.y, r.width - w + r.x - x - _padding, r.height);
 
+        if (r1.rect.width > 0 && r1.rect.height > 0) a[a.length] = r1;
+        if (r2.rect.width > 0 && r2.rect.height > 0) a[a.length] = r2;
         return a;
     }
 
@@ -100,7 +103,17 @@ export class MaxRects {
             }
         }
         let cuts = use.cut(use.rect.x, use.rect.y, w, h);
-        this._mergeRects(this._createRect(use.rect.origin.x, use.rect.origin.y, w, h), cuts);
+        let a = this._createRect(use.rect.origin.x, use.rect.origin.y, w, h);
+        for (let i = this._rects.length - 1; i >= 0; i--) {
+            if (a.contains(this._rects[i])) {
+                this._rects.splice(i, 1);
+            } else if (this._rects[i].rect.intersects(a.rect)) {
+                let b = this._rects.splice(i, 1)[0];
+                let c = b.cut(a.rect.x, a.rect.y, a.rect.width, a.rect.height);
+                cuts = this._mergeRects(c, cuts);
+            }
+        }
+        this._rects = this._mergeRects(cuts, this._rects);
         return use.rect.origin;
     }
 
@@ -125,56 +138,21 @@ export class MaxRects {
         this._rects[this._rects.length] = r;
     }
 
-    private _intersectsRect(r1: Rect, r2: Rect): boolean {
-        let x: number = r1.rect.x, y: number = r1.rect.y, w: number = r1.rect.width, h: number = r1.rect.height, w1 = r1.rect.width, h1: number = r1.rect.height;
-        if (r2.rect.x <= r1.rect.x) {
-            x = r2.rect.xMax + _padding
-            w = r1.rect.width + r1.rect.x - x;
-            h1 = r2.rect.yMax - r1.rect.yMax - _padding;
-        }
-        if (r2.rect.y <= r1.rect.y) {
-            y = r2.rect.yMax + _padding;
-            h = r1.rect.height + r1.rect.y - y;
-            w1 = r2.rect.x - r1.rect.x - _padding;
-        }
-        let a = this._createRect(r1.rect.x, r1.rect.y, w1, h1);
-        if (w > 0 && h > 0) {
-            r1.set(x, y, w, h);
-        }
-        if (a) {
-            for (let i = 0, n = this._rects.length; i < n; i++) {
-                if (this._rects[i].contains(a)) {
-                    a = null;
-                    break;
-                }
-            }
-        }
-        if (a)
-            this._rects[this._rects.length] = a;
-
-        return w > 0 && h > 0;
-    }
-
-    private _mergeRects(use: Rect, arr: Rect[]) {
-        for (let i = this._rects.length - 1; i >= 0; i--) {
-            if (use.contains(this._rects[i])) {
-                this._rects.splice(i, 1);
-            } else if (this._rects[i].rect.intersects(use.rect)) {
-                let a = this._rects.splice(i, 1)[0];
-                this._rects = this._rects.concat(a.cut(use.rect.x, use.rect.y, use.rect.width, use.rect.height));
-            }
-        }
+    private _mergeRects(arr: Rect[], target: Rect[]) {
         for (let i = arr.length - 1; i >= 0; i--) {
             let a = arr[i];
-            for (let j = this._rects.length - 1; j >= 0; j--) {
-                let b = this._rects[j];
+            for (let j = target.length - 1; j >= 0; j--) {
+                let b = target[j];
                 if (b.rect.containsRect(a.rect)) {
                     arr.splice(i, 1);
                 } else if (a.rect.containsRect(b.rect)) {
-                    this._rects.splice(j, 1);
+                    target.splice(j, 1);
+                } else if (a.id == b.id) {
+                    arr.splice(i, 1);
                 }
             }
         }
-        this._rects = this._rects.concat(arr);
+        target = target.concat(arr);
+        return target;
     }
 }

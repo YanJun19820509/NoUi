@@ -9,7 +9,8 @@
  * 临时动态合图管理器
  */
 export class TmpAtlasManager {
-    private _excludes = [];
+    private _excludes = [];//['guide$GuideDialog', 'LevelUpDialog', 'SummonBadDialog', 'SummonBadSpecialDialog', 'fight$GateStoryDialog', 'fight$FightWinDialog'];
+    // private _lastRemove = null;
     private _duration = 3;
     private _canCreate = true;
 
@@ -22,22 +23,6 @@ export class TmpAtlasManager {
     }
 
     /**
-     *  设置不生成动态合图的类型
-     */
-    public set exclude(v: string | string[]) {
-        if (!v || v == '') return;
-        this._excludes = this._excludes.concat(v);
-    }
-
-    /**
-     * 设置创建动态合图的间隔时间:s
-     */
-    public set duration(v: number) {
-        if (v <= 0) return;
-        this._duration = v;
-    }
-
-    /**
      * 临时动态合图数量
      */
     public get tmpAtlasNum(): number {
@@ -47,11 +32,15 @@ export class TmpAtlasManager {
     /**
      * 创建临时动态合图
      */
-    public create(type: string) {
+    public create(type: string, bigger = 1) {
         if (!this._cd()) { return; }
         if (!this._enable || this._excludes.includes(type)) { return; }
+        // if (this._lastRemove == type) {
+        //     this._lastRemove = null
+        //     return;
+        // }
         if (!cc.dynamicAtlasManager['tmpAtlasByName'](type)) {
-            cc.dynamicAtlasManager['setTmpAtlas'](type);
+            cc.dynamicAtlasManager['setTmpAtlas'](type, bigger);
             console.error(`setTmpAtlas${this.tmpAtlasNum}---${type}`);
         }
     }
@@ -59,6 +48,13 @@ export class TmpAtlasManager {
      * 删除临时动态合图
      */
     public remove(type: string) {
+        // if (this._lastRemove && this._lastRemove == type) { return; }
+        // this._remove(this._lastRemove);
+        // this._lastRemove = type;
+        this._remove(type);
+    }
+
+    private _remove(type: string) {
         if (!type || !this._enable || this._excludes.includes(type)) { return; }
         console.error(`removeTmpAtlas${this.tmpAtlasNum}---${type}`);
         cc.dynamicAtlasManager['removeTmpAtlas'](type);
