@@ -7,7 +7,6 @@
 
 import YJDataWork from "../base/YJDataWork";
 import YJLoadPrefab from "../base/YJLoadPrefab";
-import { no } from "../no";
 import FuckUi from "./FuckUi";
 
 const { ccclass, property, menu } = cc._decorator;
@@ -18,6 +17,8 @@ export default class SetPrefab extends FuckUi {
 
     @property({ type: YJLoadPrefab, displayName: '元素预制体' })
     loadPrefab: YJLoadPrefab = null;
+    @property({ type: cc.Node, displayName: '元素模板' })
+    template: cc.Node = null;
 
     @property({ type: cc.Node, displayName: '容器' })
     container: cc.Node = null;
@@ -31,13 +32,16 @@ export default class SetPrefab extends FuckUi {
     }
 
     private async setItems(data: any[]) {
+        if (!this.template) {
+            this.template = await this.loadPrefab.loadPrefab();
+        }
         let n = data.length
         if (this.container.childrenCount < n) {
-            let node = await this.loadPrefab.loadPrefab();
             for (let i = this.container.childrenCount; i < n; i++) {
-                cc.instantiate(node).parent = this.container;
+                cc.instantiate(this.template).parent = this.container;
             }
         }
+        n = this.container.childrenCount;
         for (let i = 0; i < n; i++) {
             let item = this.container.children[i];
             if (data[i] == null) item.active = false;
