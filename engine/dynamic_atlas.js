@@ -1,5 +1,5 @@
 //drawcall优化，对引擎相关代码的扩充或修改
-const MaxRects = require('.././SubpackageScript/framework/res/MaxRects');
+const MaxRects = require('./MaxRects');
 
 let mixEngine = function () {
     let _curTmpAtlas = null;
@@ -138,7 +138,14 @@ let mixEngine = function () {
 
         _insertTmpSpriteFrame(spriteFrame, comp) {
             // let atlas = this.tmpAtlasByName(spriteFrame['_tmpAtlasId']);
-            if (spriteFrame._texture._id == _curTmpAtlas._texture._id) return null;
+            if (spriteFrame._texture._id == _curTmpAtlas._texture._id) {
+                let _uuid;
+                if (spriteFrame instanceof cc.SpriteFrame)
+                    _uuid = spriteFrame._uuid;
+                else _uuid = spriteFrame._texture._uuid;
+                _curTmpAtlas.addToInnerComponentes(_uuid, comp);
+                return null;
+            }
             if (!spriteFrame._original && !spriteFrame._texture._texture) return null;
 
             // for (let i = 0, n = _tmpAtlases.length; i < n; i++) {
@@ -350,7 +357,7 @@ let mixEngine = function () {
         },
 
         reset() {
-            console.error(this._maxRect._rects.length);
+            console.error(this._maxRect?._rects.length);
             this._x = space;
             this._y = space;
             this._nexty = space;
@@ -368,8 +375,8 @@ let mixEngine = function () {
             if (this._innerComponentes) {
                 for (const key in this._innerComponentes) {
                     if (Object.hasOwnProperty.call(this._innerComponentes, key)) {
-                        // this.updateComp(key);
                         cc.dynamicAtlasManager.updateAtlasComp(key, this._texture._id);
+                        this.updateComp(key);
                     }
                 }
             }
@@ -409,7 +416,7 @@ let mixEngine = function () {
             let material = comp._materials[0];
             if (!material) return;
 
-            if (material.getProperty('texture') !== frame._texture._texture) {
+            if (frame._texture && material.getProperty('texture') !== frame._texture._texture) {
                 // texture was packed to dynamic atlas, should update uvs
                 comp._vertsDirty = true;
                 comp._updateMaterial();
