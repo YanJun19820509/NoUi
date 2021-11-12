@@ -1305,6 +1305,10 @@ export namespace no {
             this.loadFile(path, cc.TiledMapAsset, callback);
         }
 
+        public loadMaterial(path: string, callback: (item: cc.Material) => void): void {
+            this.loadFile(path, cc.Material, callback);
+        }
+
         // public loadDragonBonesAtlasAsset(path: string, callback: (item: dragonBones.DragonBonesAtlasAsset) => void): void {
         //     this.loadFile(path, dragonBones.DragonBonesAtlasAsset, callback);
         // }
