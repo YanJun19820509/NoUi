@@ -7,6 +7,7 @@
 
 import { no } from "../no";
 import FuckUi from "./FuckUi";
+import SetShader from "./SetShader";
 
 const { ccclass, property, menu } = cc._decorator;
 
@@ -27,6 +28,13 @@ export default class SetSpriteFrame extends FuckUi {
         this.sprite.spriteFrame = null;
         no.assetBundleManager.loadSprite(String(data), spriteFrame => {
             this.sprite.spriteFrame = spriteFrame;
+            this.checkShader();
         });
+    }
+
+    private checkShader() {
+        this.scheduleOnce(() => {
+            this.getComponent(SetShader)?.work();
+        }, 0);
     }
 }

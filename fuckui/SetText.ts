@@ -7,6 +7,7 @@
 
 import { no } from "../no";
 import FuckUi from "./FuckUi";
+import SetShader from "./SetShader";
 
 const { ccclass, property, menu } = cc._decorator;
 
@@ -51,6 +52,7 @@ export default class SetText extends FuckUi {
         } else {
             this.setRichLabel(data);
         }
+        this.checkShader();
     }
 
     private setLabel(data: any): void {
@@ -78,5 +80,11 @@ export default class SetText extends FuckUi {
         } else {
             this.richLabel.string = no.formatString(this.formatter, data);
         }
+    }
+
+    private checkShader() {
+        this.scheduleOnce(() => {
+            this.getComponent(SetShader)?.work();
+        }, 0);
     }
 }
