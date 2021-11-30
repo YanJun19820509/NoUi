@@ -12,8 +12,8 @@ import FuckUi from "./FuckUi";
 const { ccclass, property, menu } = cc._decorator;
 
 @ccclass
-@menu('NoUi/ui/SetPrefab(动态创建节点:object|array)')
-export default class SetPrefab extends FuckUi {
+@menu('NoUi/ui/SetCreateNode(动态创建节点:object|array)')
+export default class SetCreateNode extends FuckUi {
 
     @property({ type: YJLoadPrefab, displayName: '元素预制体' })
     loadPrefab: YJLoadPrefab = null;
@@ -23,10 +23,6 @@ export default class SetPrefab extends FuckUi {
     @property({ type: cc.Node, displayName: '容器' })
     container: cc.Node = null;
 
-    onLoad() {
-        this.container = this.container || this.node;
-    }
-
     protected onDataChange(data: any) {
         this.setItems([].concat(data));
     }
@@ -35,6 +31,8 @@ export default class SetPrefab extends FuckUi {
         if (!this.template) {
             this.template = await this.loadPrefab.loadPrefab();
         }
+        if (!this.container) this.container = this.node;
+
         let n = data.length
         if (this.container.childrenCount < n) {
             for (let i = this.container.childrenCount; i < n; i++) {
