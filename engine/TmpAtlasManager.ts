@@ -9,8 +9,7 @@
  * 临时动态合图管理器
  */
 export class TmpAtlasManager {
-    private _excludes = [];//['guide$GuideDialog', 'LevelUpDialog', 'SummonBadDialog', 'SummonBadSpecialDialog', 'fight$GateStoryDialog', 'fight$FightWinDialog'];
-    // private _lastRemove = null;
+    private _excludes = [];
     private _duration = 3;
     private _canCreate = true;
 

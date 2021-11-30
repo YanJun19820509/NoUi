@@ -85,6 +85,7 @@ let mixEngine = function () {
             }
         },
         setTmpAtlas(name, size) {
+            //等宽高设置有利于shader的计算
             size = size || 1;
             if (!_openEnableTmp) return;
             let atlas = new this.Atlas(_textureSize * size, _textureSize * size);
@@ -148,12 +149,6 @@ let mixEngine = function () {
             }
             if (!spriteFrame._original && !spriteFrame._texture._texture) return null;
 
-            // for (let i = 0, n = _tmpAtlases.length; i < n; i++) {
-            //     atlas = _tmpAtlases[i];
-            //     let frame = atlas.fetchSpriteFrameAsync(spriteFrame);
-            //     if (frame != null) return frame;
-            // } 
-            // _curTmpAtlas.fetchSpriteFrameAsync(spriteFrame) || 
             let frame = _curTmpAtlas.insertSpriteFrameAsync(spriteFrame, comp);
             return frame;
         },
