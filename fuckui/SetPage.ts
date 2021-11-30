@@ -7,7 +7,7 @@
 
 import YJLoadPrefab from "../base/YJLoadPrefab";
 import FuckUi from "./FuckUi";
-import SetPrefab from "./SetPrefab";
+import SetCreateNode from "./SetCreateNode";
 
 const { ccclass, property, menu } = cc._decorator;
 
@@ -22,7 +22,7 @@ const { ccclass, property, menu } = cc._decorator;
 @menu('NoUi/ui/SetPage(设置PageView的Page:object|[object]|[number])')
 export default class SetPage extends FuckUi {
 
-    @property({ type: YJLoadPrefab, displayName: '页面', tooltip: '需要挂载SetPrefab组件' })
+    @property({ type: YJLoadPrefab, displayName: '页面', tooltip: '需要挂载SetCreateNode组件' })
     page: YJLoadPrefab = null;
 
     @property(cc.PageView)
@@ -45,7 +45,7 @@ export default class SetPage extends FuckUi {
         }
         let node = cc.instantiate(this.page.loadedNode);
         this.view.addPage(node);
-        (node.getComponent(SetPrefab) || node.getComponentInChildren(SetPrefab))?.setData(data);
+        (node.getComponent(SetCreateNode) || node.getComponentInChildren(SetCreateNode))?.setData(data);
     }
 
     private _remove(index: number) {

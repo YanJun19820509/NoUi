@@ -19,6 +19,14 @@ export default class SetVisibility extends FuckUi {
     @property({ displayName: '取反' })
     reverse: boolean = false;
 
+    @property({ displayName: '默认激活' })
+    default: boolean = true;
+
+    onLoad() {
+        super.onLoad();
+        this.show(this.default);
+    }
+
     protected onDataChange(data: any) {
         if (data instanceof Object) {
             let a = true;

@@ -11,7 +11,7 @@ import FuckUi from "./FuckUi";
 const { ccclass, property, menu } = cc._decorator;
 
 @ccclass
-@menu('NoUi/ui/SetDataWork(将数据赋值给YJDataWork:any)')
+@menu('NoUi/ui/SetDataWork(将数据赋值给YJDataWork:any)')
 export default class SetDataWork extends FuckUi {
 
     @property(YJDataWork)

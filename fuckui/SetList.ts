@@ -8,7 +8,7 @@
 import YJLoadPrefab from "../base/YJLoadPrefab";
 import { no } from "../no";
 import FuckUi from "./FuckUi";
-import SetPrefab from "./SetPrefab";
+import SetCreateNode from "./SetCreateNode";
 
 const { ccclass, property, menu } = cc._decorator;
 
@@ -16,7 +16,7 @@ const { ccclass, property, menu } = cc._decorator;
 @menu('NoUi/ui/SetList(设置列表:array)')
 export default class SetList extends FuckUi {
 
-    @property({ type: YJLoadPrefab, displayName: '元素容器', tooltip: '管理列表子项布局的容器，需要挂载SetPrefab组件' })
+    @property({ type: YJLoadPrefab, displayName: '元素容器', tooltip: '管理列表子项布局的容器，需要挂载SetCreateNode组件' })
     itemPanel: YJLoadPrefab = null;
 
     @property({ displayName: '列数', step: 1, min: 1 })
@@ -119,7 +119,7 @@ export default class SetList extends FuckUi {
     }
 
     private setItemData(item: cc.Node, data: any) {
-        (item.getComponent(SetPrefab) || item.getComponentInChildren(SetPrefab)).setData(data);
+        (item.getComponent(SetCreateNode) || item.getComponentInChildren(SetCreateNode)).setData(data);
     }
 
     private setItemPosition(item: cc.Node, index: number) {

@@ -27,15 +27,20 @@ export default class YJDataWork extends YJComponent {
     private _data: no.Data = new no.Data();
 
     onLoad() {
+        this.init();
+    }
+
+    onEnable() {
+        this.initData();
+    }
+
+    public init() {
+        if (this._ready) return;
         if (this.target == null) this.target = this.node;
         this.register.onNewUiRegister = (key: string, ui: FuckUi) => {
             this.setUiData([ui], this.getValue(key));
         };
-    }
-
-    start() {
         this._ready = true;
-        this.init();
     }
 
     public get data(): any {
@@ -89,7 +94,7 @@ export default class YJDataWork extends YJComponent {
         });
     }
 
-    protected init() {
+    protected initData() {
 
     }
 }

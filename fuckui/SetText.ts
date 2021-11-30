@@ -21,25 +21,7 @@ export default class SetText extends FuckUi {
     @property({ displayName: '数值显示单位' })
     showUnit: boolean = true;
 
-    @property({ displayName: '是否为富文本' })
-    isRichText: boolean = false;
-
-    @property({ type: cc.Label, visible() { return !this.isRichText; } })
-    label: cc.Label = null;
-
-    @property({ type: cc.RichText, visible() { return this.isRichText; } })
-    richLabel: cc.RichText = null;
-
-    start() {
-        if (!this.isRichText) {
-            this.label = this.label || this.node.getComponent(cc.Label);
-            if (this.label == null) return;
-        } else {
-            this.richLabel = this.richLabel || this.node.getComponent(cc.RichText);
-            if (this.richLabel == null) return;
-        }
-    }
-
+    private label: cc.Label | cc.RichText;
 
     protected onDataChange(data: any) {
         if (typeof data == 'object') {
@@ -47,11 +29,10 @@ export default class SetText extends FuckUi {
                 if (data[k] == null) return;
             }
         }
-        if (!this.isRichText) {
-            this.setLabel(data);
-        } else {
-            this.setRichLabel(data);
+        if (!this.label){
+            this.label = this.node.getComponent(cc.Label) || this.node.getComponent(cc.RichText);
         }
+        this.setLabel(data);
         this.checkShader();
     }
 
@@ -67,18 +48,6 @@ export default class SetText extends FuckUi {
             this.label.string = no.formatString(this.formatter, { '0': data });
         } else {
             this.label.string = no.formatString(this.formatter, data);
-        }
-    }
-
-    private setRichLabel(data: any): void {
-        if (this.richLabel == null) return;
-        if (data == '') this.richLabel.string = '';
-        if (typeof data == 'string') {
-            this.richLabel.string = no.formatString(this.formatter, data.split('|'));
-        } else if (typeof data == 'number') {
-            this.label.string = no.formatString(this.formatter, { '0': data });
-        } else {
-            this.richLabel.string = no.formatString(this.formatter, data);
         }
     }
 
