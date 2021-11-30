@@ -77,6 +77,10 @@ export namespace no {
                 return a.order - b.order;
             });
         }
+
+        public execute(...args: any[]): void {
+            this.hander.emit([].concat(args, this.hander.customEventData));
+        }
     }
 
     /**debug用时间日志 */
@@ -113,10 +117,10 @@ export namespace no {
 
     /**
      * 发出消息并回调一次
-     * @param type 
-     * @param callback 
-     * @param args 
-     * @param target 
+     * @param type
+     * @param callback
+     * @param args
+     * @param target
      */
     export function emitAndOnceCallback(emitType: string, callbackType: string, callback: (v: any) => void, args?: any[], target?: any): void {
         if (Evn['_callbackTable']?.[emitType] == null) {
@@ -136,7 +140,7 @@ export namespace no {
     /**
      * 等待事件
      * @param type 事件类型
-     * @param target 
+     * @param target
      * @param arg 标识，当事件触发时会将这个值返回
      */
     export async function waitForEvent(type: string, target?: any, arg?: any): Promise<any> {
@@ -173,7 +177,7 @@ export namespace no {
     /**
      * 根据模板格式化字符串
      * @param formatter 模板，如'{a}:{b}:{c}' {0}:{1}:{2}
-     * @param data 需要替换的数据，如{'a':1,'b':2,'c':3}，返回1:2:3  [1,2,3] 1:2:3 
+     * @param data 需要替换的数据，如{'a':1,'b':2,'c':3}，返回1:2:3  [1,2,3] 1:2:3
      */
     export function formatString(formatter: string, data: any): string {
         var s = formatter;
@@ -191,7 +195,7 @@ export namespace no {
 
     /**
      * clone JSON对象
-     * @param json 
+     * @param json
      */
     export function cloneJson(json: any): any {
         return JSON.parse(JSON.stringify(json));
@@ -199,7 +203,7 @@ export namespace no {
 
 
     /**
-     * 
+     *
      * @param hex '#412a00'
      * @returns {r: 65, g: 42, b: 0}
      */
@@ -215,7 +219,7 @@ export namespace no {
 
     /**
      * 封装cc.Color.fromHEX
-     * @param v 
+     * @param v
      */
     export function str2Color(v: string): cc.Color {
         let c = cc.color();
@@ -258,7 +262,7 @@ export namespace no {
 
     /**
      * 大数字转换成最多3位数加单位的格式
-     * @param n 
+     * @param n
      */
     export function num2str(n: number): string {
         if (n < 1000) return String(n);
@@ -277,8 +281,8 @@ export namespace no {
 
     /**
      * 从数组里随机几n个元素
-     * @param arr 
-     * @param n 
+     * @param arr
+     * @param n
      */
     export function arrayRandom(arr: any, n = 1): any {
         if (!arr || arr.length == 0) return null;
@@ -297,7 +301,7 @@ export namespace no {
 
     /**
      * 从object中获取值
-     * @param data 
+     * @param data
      * @param path 如a.b.c
      */
     export function getValue(data: Object, path?: string): any {
@@ -316,7 +320,7 @@ export namespace no {
     }
 
     /**
-     * 
+     *
      * @param data Object
      * @param path ['a','b','c']
      * @param def any 默认值
@@ -328,7 +332,7 @@ export namespace no {
 
     /**
      * 向object中写入值
-     * @param data 
+     * @param data
      * @param path 如a.b.c
      * @param value
      */
@@ -354,7 +358,7 @@ export namespace no {
     }
 
     /**
-     * 
+     *
      * @param data Object
      * @param path ['a','b','c']
      * @param value any
@@ -366,7 +370,7 @@ export namespace no {
 
     /**
      * 删除object中的值
-     * @param data 
+     * @param data
      * @param path 如a.b.c
      */
     export function deleteValue(data: Object, path: string): any {
@@ -389,8 +393,8 @@ export namespace no {
 
     /**
      * 连接多个字符串
-     * @param separator 
-     * @param strs 
+     * @param separator
+     * @param strs
      */
     export function joinStrings(separator: string, ...strs: string[]): string {
         let a: string[] = [];
@@ -403,7 +407,7 @@ export namespace no {
     }
     /**
      * 连接多个字符串，默认连接符[.]
-     * @param strs 
+     * @param strs
      */
     export function join(...strs: string[]): string {
         return this.joinStrings('.', ...strs);
@@ -427,10 +431,10 @@ export namespace no {
     };
 
     /**
-     * 
-     * @param array 
-     * @param item 
-     * @param key 
+     *
+     * @param array
+     * @param item
+     * @param key
      */
     export function indexOfArray(array: any[], item: any, key: string): number {
         if (array == null) return -1;
@@ -459,8 +463,8 @@ export namespace no {
 
     /**
      * 在数据后插入新数据
-     * @param array 
-     * @param value 
+     * @param array
+     * @param value
      */
     export function pushToArray(array: any[], value: any): void {
         if (value == null) return;
@@ -479,7 +483,7 @@ export namespace no {
 
     /**
      * 获得map中key的数组
-     * @param map 
+     * @param map
      */
     export function MapKeys2Array<K, T>(map: Map<K, T>): K[] {
         let a: K[] = [];
@@ -494,7 +498,7 @@ export namespace no {
 
     /**
      * 获得map中value的数组
-     * @param map 
+     * @param map
      */
     export function MapValues2Array<K, T>(map: Map<K, T>): T[] {
         if (map == null || map.size == 0) return [];
@@ -523,8 +527,8 @@ export namespace no {
 
     /**
      * 以v1为圆心从水平正x方向到v2的夹角
-     * @param v1 
-     * @param v2 
+     * @param v1
+     * @param v2
      * @returns angle角度,radian弧度
      */
     export function angleTo(v1: cc.Vec2 | cc.Vec3, v2: cc.Vec2 | cc.Vec3): { angle: number, radian: number } {
@@ -538,7 +542,7 @@ export namespace no {
 
     /**
      * 执行EventHandler
-     * @param handlers 
+     * @param handlers
      */
     export function executeHandlers(handlers: cc.Component.EventHandler[], ...args: any[]): void {
         handlers.forEach(handler => {
@@ -548,7 +552,7 @@ export namespace no {
 
     /**
      * Vec3转Vec2
-     * @param v3 
+     * @param v3
      */
     export function vec3ToVec2(v3: cc.Vec3): cc.Vec2 {
         return new cc.Vec2(v3.x, v3.y);
@@ -556,10 +560,10 @@ export namespace no {
 
     /**
      * 创建一个EventHandler
-     * @param target 
-     * @param component 
-     * @param handler 
-     * @param arg 
+     * @param target
+     * @param component
+     * @param handler
+     * @param arg
      */
     export function createEventHandler(target: cc.Node, component: string, handler: string, arg = ''): cc.Component.EventHandler {
         let a = new cc.Component.EventHandler();
@@ -580,8 +584,8 @@ export namespace no {
     /**
      * 等待几秒
      * @param duration 等待时长(秒)
-     * @param component 
-     * @returns 
+     * @param component
+     * @returns
      */
     export async function sleep(duration: number, component?: cc.Component): Promise<void> {
         if (duration <= 0) duration = cc.director.getDeltaTime();
@@ -604,8 +608,8 @@ export namespace no {
 
     /**
      * 取两值之间的随机值
-     * @param min 
-     * @param max 
+     * @param min
+     * @param max
      */
     export function randomBetween(min: number, max: number): number {
         if (min == max) return min;
@@ -699,8 +703,8 @@ export namespace no {
 
     /**
      * 编辑器模式下加载资源
-     * @param path 
-     * @param callback 
+     * @param path
+     * @param callback
      */
     export function loadAnyInEditor<T extends cc.Asset>(path: string, callback: (item: T) => void): void {
         Editor.assetdb.queryAssets(`db://assets/${path}.*`, null, (err, assetInfos) => {
@@ -713,7 +717,7 @@ export namespace no {
 
     /**
      * 节点的世界坐标
-     * @param node 
+     * @param node
      */
     export function nodeWorldPosition(node: cc.Node, out?: cc.Vec3): cc.Vec3 {
         out = out || cc.v3();
@@ -722,8 +726,8 @@ export namespace no {
 
     /**
      * 某节点坐标转换到另一个节点内
-     * @param node 
-     * @param otherNode 
+     * @param node
+     * @param otherNode
      */
     export function nodePositionInOtherNode(node: cc.Node, otherNode: cc.Node, out?: cc.Vec3): cc.Vec3 {
         out = out || cc.v3();
@@ -733,7 +737,7 @@ export namespace no {
 
     /**
      * 数组排序
-     * @param arr 
+     * @param arr
      * @param handler 排序方法,为空则按数字大小排序
      * @param desc 是否降序
      */
@@ -750,7 +754,7 @@ export namespace no {
 
     /**
      * 节点在world中的rect
-     * @param node 
+     * @param node
      */
     export function nodeBoundingBox(node: cc.Node, offset?: cc.Vec2, subSize?: cc.Size): cc.Rect {
         offset = offset || cc.v2();
@@ -768,7 +772,7 @@ export namespace no {
 
     /**
      * 判断点是否在节点范围内
-     * @param node 
+     * @param node
      */
     export function nodeContainsPoint(node: cc.Node, point: cc.Vec2, offset?: cc.Vec2, subSize?: cc.Size): boolean {
         let rect = this.nodeBoundingBox(node, offset, subSize);
@@ -777,9 +781,9 @@ export namespace no {
 
     /**
      * 判断两个节点是否相交
-     * @param node 
-     * @param otherNode 
-     * @returns 
+     * @param node
+     * @param otherNode
+     * @returns
      */
     export function nodeIntersects(node: cc.Node, otherNode: cc.Node): boolean {
         let rect = this.nodeBoundingBox(node),
@@ -789,10 +793,10 @@ export namespace no {
 
     /**
      * 对象转数组
-     * @param obj 
-     * @param keyName 
-     * @param valueName 
-     * @returns 
+     * @param obj
+     * @param keyName
+     * @param valueName
+     * @returns
      */
     export function object2Array(obj: any, keyName: string, valueName: string): any[] {
         if (obj == null || keyName == null || valueName == null) return null;
@@ -809,8 +813,8 @@ export namespace no {
 
     /**
      * 对象转数组
-     * @param obj 
-     * @returns 
+     * @param obj
+     * @returns
      */
     export function object2List(obj: any): any[] {
         if (obj == null) return [];
@@ -859,8 +863,8 @@ export namespace no {
 
     /**
      * 解析缓动动效数据
-     * @param data 
-     * @param node 
+     * @param data
+     * @param node
      * @returns cc.Tween
      * @example  data = {
      *      delay?: 1,
@@ -968,7 +972,7 @@ export namespace no {
 
         /**
          * 读
-         * @param path 
+         * @param path
          */
         public get(paths?: string | string[]): any {
             if (this._data == null) return null;
@@ -987,7 +991,7 @@ export namespace no {
         }
         /**
          * 写
-         * @param path 
+         * @param path
          * @param value 如果value为null，则不处理
          */
         public set(path: string, value: any) {
@@ -1010,7 +1014,7 @@ export namespace no {
 
         /**
          * 删
-         * @param path 
+         * @param path
          */
         public delete(path: string): any {
             if (this._data == null) return null;
@@ -1037,7 +1041,7 @@ export namespace no {
 
         /**
          * 获取本地数据
-         * @param key 
+         * @param key
          */
         public getLocal(key: string): any {
             let a = localStorage.getItem(key);
@@ -1046,8 +1050,8 @@ export namespace no {
         }
         /**
          * 写入本地数据
-         * @param key 
-         * @param value 
+         * @param key
+         * @param value
          */
         public setLocal(key: string, value: any): void {
             localStorage.setItem(key, JSON.stringify(value));
@@ -1074,22 +1078,22 @@ export namespace no {
         }
         /**
          * 获取全局临时数据
-         * @param key 
+         * @param key
          */
         public getTmpData(key: string): any {
             return { [key]: this.getTmpValue(key) };
         }
         /**
          * 获取全局临时数据值
-         * @param key 
+         * @param key
          */
         public getTmpValue(key: string): any {
             return this._tmp.get(key);
         }
         /**
          * 写入全局临时数据
-         * @param key 
-         * @param value 
+         * @param key
+         * @param value
          */
         public setTmpValue(key: string, value: any): void {
             if (value == null) {
@@ -1132,8 +1136,8 @@ export namespace no {
 
         /**
          * 预加载bundles
-         * @param paths 
-         * @param onProgress 
+         * @param paths
+         * @param onProgress
          */
         public loadBundles(paths: string[], onProgress: (progress: number) => void): void {
             if (paths == null) {
@@ -1154,9 +1158,9 @@ export namespace no {
         }
         /**
          * 预加载files
-         * @param bundleName 
-         * @param filePaths 
-         * @param onProgress 
+         * @param bundleName
+         * @param filePaths
+         * @param onProgress
          */
         public preloadFiles(bundleName: string, filePaths: string[], onProgress: (progress: number) => void): void {
             let bundle = this.getBundle(bundleName);
@@ -1178,8 +1182,8 @@ export namespace no {
 
         /**
          * 预加载场景
-         * @param name 
-         * @param onProgress 
+         * @param name
+         * @param onProgress
          */
         public preloadScene(name: string, onProgress: (progress: number) => void): void {
             cc.director.preloadScene(name, (finished, total, item) => {
@@ -1194,8 +1198,8 @@ export namespace no {
         }
         /**
          * 加载bundle
-         * @param name 
-         * @param callback 
+         * @param name
+         * @param callback
          */
         public loadBundle(name: string, callback: () => void): void {
             let bundle = this.getBundle(name);
@@ -1213,7 +1217,7 @@ export namespace no {
         }
         /**
          * 获取已加载的bundle
-         * @param name 
+         * @param name
          */
         public getBundle(name: string): cc.AssetManager.Bundle {
             return cc.assetManager.getBundle(name);
@@ -1221,9 +1225,9 @@ export namespace no {
 
         /**
          * 通用资源加载
-         * @param path 
-         * @param type 
-         * @param callback 
+         * @param path
+         * @param type
+         * @param callback
          */
         public loadFile(path: string, type: typeof cc.Asset, callback: (asset: cc.Asset) => void): void {
             let p = this.assetPath(path);
@@ -1233,10 +1237,10 @@ export namespace no {
         }
         /**
          * 加载bundle中的文件
-         * @param bundleName 
-         * @param fileName 
-         * @param type 
-         * @param callback 
+         * @param bundleName
+         * @param fileName
+         * @param type
+         * @param callback
          */
         private load(bundleName: string, fileName: string, type: typeof cc.Asset, callback: (asset: cc.Asset) => void): void {
             if (bundleName == null || bundleName == '') {
@@ -1279,6 +1283,10 @@ export namespace no {
 
         public loadSprite(path: string, callback: (item: cc.SpriteFrame) => void): void {
             this.loadFile(path, cc.SpriteFrame, callback);
+        }
+
+        public loadSpine(path: string, callback: (item: sp.SkeletonData) => void): void {
+            this.loadFile(path, sp.SkeletonData, callback);
         }
 
         public loadAtlas(path: string, callback: (item: cc.SpriteAtlas) => void): void {
@@ -1337,8 +1345,8 @@ export namespace no {
         }
         /**
          * 加载场景
-         * @param name 
-         * @param callback 
+         * @param name
+         * @param callback
          */
         public loadScene(name: string, callback: () => void): void {
             cc.director.loadScene(name, callback);
@@ -1346,8 +1354,8 @@ export namespace no {
 
         /**
          * 从服务器加载文件
-         * @param url 
-         * @param callback 
+         * @param url
+         * @param callback
          */
         public loadRemoteFile<T extends cc.Asset>(url: string, callback: (file: T) => void) {
             cc.assetManager.loadRemote<T>(url, (err, file) => {
@@ -1367,7 +1375,7 @@ export namespace no {
 
         /**
          * 获取bundle路径，文件名及文件类型
-         * @param path 
+         * @param path
          * @returns  `{'bundle','file','type'}
          */
         public assetPath(path: string): AssetPath {
@@ -1495,7 +1503,7 @@ export namespace no {
         }
 
         /**
-         * 加载依赖的资源 
+         * 加载依赖的资源
          * @param uuid 依赖资源的uuid数组
          */
         private loadDepends(uuid: string) {
@@ -1529,7 +1537,7 @@ export namespace no {
 
         /**
          * 获取缓存的对象
-         * @param type 
+         * @param type
          */
         public reuse<T>(type: string): T {
             if (!this.cacheMap.has(type)) return null;
@@ -1539,8 +1547,8 @@ export namespace no {
 
         /**
          * 回收缓存对象
-         * @param type 
-         * @param object 
+         * @param type
+         * @param object
          */
         public recycle(type: string, object: any): void {
             if (type == null || type == '') {
@@ -1625,8 +1633,8 @@ export namespace no {
         /**
          * 监听红点状态
          * @param type 红点类型
-         * @param func 
-         * @param target 
+         * @param func
+         * @param target
          */
 
         public onHint(type: string, func: Function, target: any): void {
@@ -1638,7 +1646,7 @@ export namespace no {
 
         /**
          * 移除红点状态监听
-         * @param target 
+         * @param target
          */
         public offHint(target: any): void {
             this.event.targetOff(target);
@@ -1723,7 +1731,7 @@ export namespace no {
         /**
          * 异步播放
          * @param path 音频剪辑路径
-         * @returns 
+         * @returns
          */
         public async playOnceAsync(path: string): Promise<void> {
             if (this.isEffectMute) return;
@@ -1982,7 +1990,7 @@ export namespace no {
 
         /**
          * 值比较
-         * @param other 
+         * @param other
          * @returns 负值：小于，0：等于，正值：大于
          */
         public compareTo(other: ScientificString): number {
@@ -1996,8 +2004,8 @@ export namespace no {
 
         /**
          * 值比较
-         * @param s1 
-         * @param s2 
+         * @param s1
+         * @param s2
          * @returns 负值：小于，0：等于，正值：大于
          */
         public static compareTo(s1: string, s2: string): number {
