@@ -6,52 +6,61 @@
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
 import { no } from "../no";
-import YJLoadPrefab from "./YJLoadPrefab";
+import YJPanel from "./node/YJPanel";
 
-const { ccclass, property } = cc._decorator;
+const { ccclass, property, menu } = cc._decorator;
 
-@ccclass('WindowInfo')
-export class WindowInfo {
-    @property({ displayName: '触发类型', tooltip: '触发显示时的事件类型' })
+@ccclass('LayerInfo')
+export class LayerInfo {
+    @property({ displayName: '层级别名', tooltip: '创建panel时根据别名指定panel在场景中的层级' })
     type: string = '';
-    @property(YJLoadPrefab)
-    prefabLoader: YJLoadPrefab = null;
-    @property({ displayName: '回收类型' })
-    recycleType: string = '';
-    @property({ displayName: '加载时创建' })
-    createOnLoad: boolean = false;
+    @property({ displayName: '容器', type: cc.Node })
+    content: cc.Node = null;
 }
 
 @ccclass
+@menu('NoUi/base/YJWindowManager')
 export default class YJWindowManager extends cc.Component {
 
-    @property(WindowInfo)
-    infos: WindowInfo[] = [];
-    @property(cc.Node)
-    parent: cc.Node = null;
+    @property(LayerInfo)
+    infos: LayerInfo[] = [];
+
+    private static _ins: YJWindowManager;
 
     onLoad() {
-        this.infos.forEach(info => {
-            no.Evn.on(info.type, this.onCreate, this);
-            if (info.createOnLoad) this.createNode(info.recycleType, info.prefabLoader);
-        });
+        YJWindowManager._ins = this;
     }
 
-    private onCreate(type: string) {
-        for (let i = 0, n = this.infos.length; i < n; i++) {
-            let info = this.infos[i];
-            if (info.type == type) {
-                this.createNode(info.recycleType, info.prefabLoader);
+    onDestroy() {
+        YJWindowManager._ins = null;
+    }
+
+    /**
+     * 创建功能面板
+     * @param comp 功能组件类
+     * @param to 所属层级
+     * @returns 
+     */
+    public static async createPanel<T extends YJPanel>(comp: typeof YJPanel, to: string): Promise<T> {
+        if (!comp) return null;
+        await no.waitFor(() => { return YJWindowManager._ins != null; });
+        let self = YJWindowManager._ins;
+        let content: cc.Node;
+        for (let i = 0, n = self.infos.length; i < n; i++) {
+            if (self.infos[i].type == to) {
+                content = self.infos[i].content;
+                break;
             }
         }
-    }
 
-    private async createNode(recycleType: string, loader: YJLoadPrefab) {
-        let node = no.cachePool.reuse<cc.Node>(recycleType);
-        if (!node) {
-            await loader.loadPrefab();
-            node = cc.instantiate(loader.loadedNode);
+        let a: T = content.getComponentInChildren(comp.name);
+        if (a != null) {
+            return a;
         }
-        node.parent = this.parent;
+        let node = await comp.prefab.loadPrefab();
+        a = node.getComponent(comp.name);
+        a.initPanel();
+        content.addChild(node);
+        return a;
     }
 }

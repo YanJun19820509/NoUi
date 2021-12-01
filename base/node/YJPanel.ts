@@ -6,13 +6,13 @@
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
 import { no } from "../../no";
-import YJCacheObject from "../YJCacheObject";
+import YJLoadPrefab from "../YJLoadPrefab";
 
 const { ccclass, property, menu } = cc._decorator;
 
 @ccclass
 @menu('NoUi/node/YJPanel(面板基类)')
-export default class YJPanel extends YJCacheObject {
+export default class YJPanel extends cc.Component {
 
     /**面板打开事件 */
     public static PanelOpenEvent = '_PanelOpen';
@@ -22,6 +22,9 @@ export default class YJPanel extends YJCacheObject {
     @property
     panelType: string = 'popup_panel';
 
+    @property(YJLoadPrefab)
+    static prefab: YJLoadPrefab = new YJLoadPrefab();
+
     onEnable() {
         no.Evn.emit(YJPanel.PanelOpenEvent, this.panelType);
     }
@@ -30,7 +33,24 @@ export default class YJPanel extends YJCacheObject {
         no.Evn.emit(YJPanel.PanelCloseEvent, this.panelType);
     }
 
-    public a_close() {
-        this.recycle();
+    /**
+     * 可在prefab实例化时调用，进行界面内容的初始化
+     */
+    public initPanel() {
+        this.onInitPanel();
+    }
+
+    public closePanel() {
+        this.onClosePanel();
+        this.node.destroy();
+    }
+
+    //////由子类实现
+    protected onInitPanel() {
+
+    }
+
+    protected onClosePanel() {
+
     }
 }
