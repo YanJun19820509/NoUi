@@ -39,7 +39,7 @@ export default class YJWindowManager extends cc.Component {
      * 创建功能面板
      * @param comp 功能组件类
      * @param to 所属层级
-     * @returns 
+     * @returns
      */
     public static async createPanel<T extends YJPanel>(comp: typeof YJPanel, to: string): Promise<T> {
         if (!comp) return null;
@@ -57,10 +57,14 @@ export default class YJWindowManager extends cc.Component {
         if (a != null) {
             return a;
         }
-        let node = await comp.prefab.loadPrefab();
-        a = node.getComponent(comp.name);
-        a.initPanel();
-        content.addChild(node);
-        return a;
+        return new Promise<T>(resolve => {
+            no.assetBundleManager.loadByUuid({ uuid: comp.prefabUuid, type: cc.Prefab }, (pf: cc.Prefab) => {
+                let node = cc.instantiate(pf);
+                a = node.getComponent(comp.name);
+                a.initPanel();
+                content.addChild(node);
+                resolve(a);
+            });
+        });
     }
 }

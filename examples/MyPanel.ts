@@ -12,5 +12,5 @@ const {ccclass, property} = cc._decorator;
 @ccclass
 export default class MyPanel extends YJPanel {
 
-    
+    public static prefabUuid = '59b035aa-fc1c-4ae2-ac8a-40ea291888f1';
 }

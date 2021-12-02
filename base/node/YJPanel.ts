@@ -6,7 +6,6 @@
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
 import { no } from "../../no";
-import YJLoadPrefab from "../YJLoadPrefab";
 
 const { ccclass, property, menu } = cc._decorator;
 
@@ -19,11 +18,11 @@ export default class YJPanel extends cc.Component {
     /**面板关闭事件 */
     public static PanelCloseEvent = '_PanelClose';
 
+    /**所属预制体uuid */
+    public static prefabUuid: string;
+
     @property
     panelType: string = 'popup_panel';
-
-    @property(YJLoadPrefab)
-    static prefab: YJLoadPrefab = new YJLoadPrefab();
 
     onEnable() {
         no.Evn.emit(YJPanel.PanelOpenEvent, this.panelType);
