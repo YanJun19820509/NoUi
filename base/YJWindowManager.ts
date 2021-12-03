@@ -6,7 +6,7 @@
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
 import { no } from "../no";
-import YJPanel from "./node/YJPanel";
+import YJPanel, { YJPanelPrefabMetaKey } from "./node/YJPanel";
 
 const { ccclass, property, menu } = cc._decorator;
 
@@ -58,7 +58,7 @@ export default class YJWindowManager extends cc.Component {
             return a;
         }
         return new Promise<T>(resolve => {
-            no.assetBundleManager.loadByUuid({ uuid: comp.prefabUuid, type: cc.Prefab }, (pf: cc.Prefab) => {
+            no.assetBundleManager.loadPrefab(comp.prototype[YJPanelPrefabMetaKey], (pf: cc.Prefab) => {
                 let node = cc.instantiate(pf);
                 a = node.getComponent(comp.name);
                 a.initPanel();

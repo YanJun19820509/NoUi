@@ -5,12 +5,12 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import YJPanel from "../base/node/YJPanel";
+import YJPanel, { panelPrefabPath } from "../base/node/YJPanel";
 
-const {ccclass, property} = cc._decorator;
+const { ccclass } = cc._decorator;
 
 @ccclass
+@panelPrefabPath('Script/NoUi/examples/panel.prefab')
 export default class MyPanel extends YJPanel {
 
-    public static prefabUuid = '59b035aa-fc1c-4ae2-ac8a-40ea291888f1';
 }
