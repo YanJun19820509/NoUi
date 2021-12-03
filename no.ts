@@ -708,8 +708,7 @@ export namespace no {
      */
     export function loadAnyInEditor<T extends cc.Asset>(path: string, callback: (item: T) => void): void {
         Editor.assetdb.queryAssets(`db://assets/${path}.*`, null, (err, assetInfos) => {
-            // Editor.log(JSON.stringify(assetInfos[0]));
-            cc.assetManager.loadAny(assetInfos[0].uuid, (e, f: T) => {
+            cc.assetManager.loadAny({ uuid: assetInfos[0].uuid }, (e, f: T) => {
                 callback(f);
             });
         });
@@ -945,6 +944,18 @@ export namespace no {
             args[pair[0]] = pair[1];
         }
         return args;
+    }
+
+    /**
+     * 注解 用于向类中添加元数据.
+     * @param key 元数据key
+     * @param value 元数据值
+     * @returns
+     */
+    export function addMeta(key: string, value: string) {
+        return function (target: Function) {
+            target.prototype[key] = value;
+        };
     }
 
     /**基础数据类 */
@@ -1244,7 +1255,7 @@ export namespace no {
          */
         private load(bundleName: string, fileName: string, type: typeof cc.Asset, callback: (asset: cc.Asset) => void): void {
             if (bundleName == null || bundleName == '') {
-                cc.assetManager.loadAny(fileName, null, (err, item) => {
+                cc.assetManager.loadAny({ 'url': fileName, 'type': type }, (err, item) => {
                     if (item == null) {
                         no.log(err.message);
                     } else {
@@ -1383,18 +1394,9 @@ export namespace no {
             let file = p.pop().split('.');
             let fileName = file[0],
                 fileType = file[1];
-            let bundle: string;
-            let n = p.length;
-            for (let i = n - 1; i >= 0; i--) {
-                bundle = p.join('/');
-                if (this.getBundle(bundle) != null) {
-                    break;
-                } else {
-                    bundle = '';
-                    let f = p.pop();
-                    fileName = [f, fileName].join('/');
-                }
-            }
+            let bundle = p.shift();
+            p[p.length] = fileName;
+            fileName = p.join('/');
             let a = new AssetPath(bundle, fileName);
             let s: typeof cc.Asset;
             if (fileType != null) {
@@ -1484,8 +1486,8 @@ export namespace no {
             this.preloadFiles(p.bundle, paths, onProgress);
         }
 
-        public loadByUuid<T extends cc.Asset>(requestInfo: { uuid: string, type: typeof cc.Asset }, callback: (file: T) => void) {
-            cc.assetManager.loadAny(requestInfo, (e: Error, f: T) => {
+        public loadByUuid<T extends cc.Asset>(uuid: string, type: typeof cc.Asset, callback: (file: T) => void) {
+            cc.assetManager.loadAny({ 'uuid': uuid, 'type': type }, (e: Error, f: T) => {
                 if (e != null) {
                     no.err(e.stack);
                 }

@@ -7,7 +7,7 @@
 
 import { no } from "../../no";
 
-const { ccclass, property , menu} = cc._decorator;
+const { ccclass, property, menu } = cc._decorator;
 
 @ccclass
 @menu('NoUi/audio/YJLoadAudioClip(动态加载音频剪辑)')
@@ -29,7 +29,7 @@ export default class YJLoadAudioClip extends cc.Component {
         if (this.clipUuid == '') return null;
         if (this.loadedAudioClip != null) return this.loadedAudioClip;
         return new Promise<cc.AudioClip>(resolve => {
-            no.assetBundleManager.loadByUuid<cc.AudioClip>({ uuid: this.clipUuid, type: cc.AudioClip }, (p) => {
+            no.assetBundleManager.loadByUuid<cc.AudioClip>(this.clipUuid, cc.AudioClip, (p) => {
                 if (p == null) resolve(null);
                 else {
                     this.loadedAudioClip = p;

@@ -59,7 +59,7 @@ export default class YJLoadPrefab extends cc.Component {
         if (this.prefabUuid == '') return null;
         if (this.loadedNode != null && this.loadedNode.isValid) return this.loadedNode;
         return new Promise<cc.Node>(resolve => {
-            no.assetBundleManager.loadByUuid<cc.Prefab>({ uuid: this.prefabUuid, type: cc.Prefab }, (p) => {
+            no.assetBundleManager.loadByUuid<cc.Prefab>(this.prefabUuid, cc.Prefab, (p) => {
                 if (p == null) resolve(null);
                 else {
                     this.loadedNode = cc.instantiate(p);
