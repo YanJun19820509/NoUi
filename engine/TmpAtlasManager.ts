@@ -9,7 +9,7 @@
  * 临时动态合图管理器
  */
 export class TmpAtlasManager {
-    private _excludes = [];
+    private static _excludes = [];
     private _duration = 3;
     private _canCreate = true;
 
@@ -19,6 +19,14 @@ export class TmpAtlasManager {
             this._ins = new TmpAtlasManager();
         }
         return this._ins;
+    }
+
+    /**
+     * 添加不需要创建合图的界面
+     * @param name
+     */
+    public static addExclude(name: string) {
+        this._excludes[this._excludes.length] = name;
     }
 
     /**
@@ -33,7 +41,7 @@ export class TmpAtlasManager {
      */
     public create(type: string, bigger = 1) {
         if (!this._cd()) { return; }
-        if (!this._enable || this._excludes.includes(type)) { return; }
+        if (!this._enable || TmpAtlasManager._excludes.includes(type)) { return; }
         // if (this._lastRemove == type) {
         //     this._lastRemove = null
         //     return;
@@ -54,7 +62,7 @@ export class TmpAtlasManager {
     }
 
     private _remove(type: string) {
-        if (!type || !this._enable || this._excludes.includes(type)) { return; }
+        if (!type || !this._enable || TmpAtlasManager._excludes.includes(type)) { return; }
         console.error(`removeTmpAtlas${this.tmpAtlasNum}---${type}`);
         cc.dynamicAtlasManager['removeTmpAtlas'](type);
         console.error(`currentAtlasName---${cc.dynamicAtlasManager['currentAtlasName']}`);

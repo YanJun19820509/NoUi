@@ -22,6 +22,15 @@ export default class SetCreateNode extends FuckUi {
 
     @property({ type: cc.Node, displayName: '容器' })
     container: cc.Node = null;
+    @property({ tooltip: 'disable时清除子节点' })
+    clearOnDisable: boolean = false;
+
+    onDisable() {
+        if (this.clearOnDisable){
+            this.a_clearData();
+            this.container.removeAllChildren();
+        }
+    }
 
     protected onDataChange(data: any) {
         this.setItems([].concat(data));

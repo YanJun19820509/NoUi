@@ -40,7 +40,7 @@ export default class FuckUi extends cc.Component {
     public setData(d: any) {
         if (d == null) return;
         let a = JSON.stringify(d);
-        if (a == this._oldData && this.saveIgnore) return;
+        if (this.saveIgnore && a == this._oldData) return;
         this._oldData = a;
         this.logValue(d);
         this.onDataChange(d);
@@ -61,8 +61,8 @@ export default class FuckUi extends cc.Component {
 
     /**
      *  给指定property赋值
-     * @param propertyName 
-     * @param v 
+     * @param propertyName
+     * @param v
      */
     public setPropertyValue(propertyName: string, v: any): void {
         this[propertyName] = v;
@@ -79,7 +79,7 @@ export default class FuckUi extends cc.Component {
 
     /**
      * 需要子类实际具体逻辑
-     * @param data 
+     * @param data
      */
     protected onDataChange(data: any) {
 
