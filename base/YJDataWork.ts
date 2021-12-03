@@ -7,7 +7,6 @@
 
 import FuckUi from "../fuckui/FuckUi";
 import { no } from "../no";
-import { YJComponent } from "./YJComponent";
 import YJFuckUiRegister from "./YJFuckUiRegister";
 
 const { ccclass, property, menu, requireComponent } = cc._decorator;
@@ -15,16 +14,14 @@ const { ccclass, property, menu, requireComponent } = cc._decorator;
 @ccclass
 @menu('NoUi/base/YJDataWork(数据处理基类)')
 @requireComponent(YJFuckUiRegister)
-export default class YJDataWork extends YJComponent {
+export default class YJDataWork extends cc.Component {
 
-    @property(cc.Node)
-    target: cc.Node = null;
     @property(YJFuckUiRegister)
     register: YJFuckUiRegister = null;
 
     private _ready: boolean = false;
 
-    private _data: no.Data = new no.Data();
+    protected _data: no.Data = new no.Data();
 
     onLoad() {
         this.init();
@@ -36,7 +33,6 @@ export default class YJDataWork extends YJComponent {
 
     public init() {
         if (this._ready) return;
-        if (this.target == null) this.target = this.node;
         this.register.onNewUiRegister = (key: string, ui: FuckUi) => {
             this.setUiData([ui], this.getValue(key));
         };
@@ -83,13 +79,13 @@ export default class YJDataWork extends YJComponent {
         uis.forEach(ui => {
             let keys = ui.bindKeys;
             if (keys.length == 1) {
-                ui.setData(data);
+                ui.setData(JSON.stringify(data));
             } else {
                 let a = {};
                 keys.forEach(key => {
                     a[key] = this._data.get(key);
                 });
-                ui.setData(a);
+                ui.setData(JSON.stringify(a));
             }
         });
     }

@@ -30,18 +30,18 @@ export default class FuckUi extends cc.Component {
     @property({ displayName: '输出赋值日志' })
     private showValueLog: boolean = false;
 
-    private _oldData: any;
+    private _oldData: string;
 
     onLoad() {
         if (CC_EDITOR) return;
         this.register?.register(this);
     }
 
-    public setData(d: any) {
+    public setData(d: string) {
         if (d == null) return;
-        let a = JSON.stringify(d);
-        if (this.saveIgnore && a == this._oldData) return;
-        this._oldData = a;
+        if (this.saveIgnore && d == this._oldData) return;
+        this._oldData = d;
+        d = JSON.parse(d);
         this.logValue(d);
         this.onDataChange(d);
         if (this.once) this.destroy();
