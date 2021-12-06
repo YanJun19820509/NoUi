@@ -1035,6 +1035,16 @@ export namespace no {
         public clear(): void {
             this._data = {};
         }
+
+        /**
+         * 枚举
+         * @param hander
+         */
+        public enumerate(hander: (k: string, v: any) => void) {
+            for (const key in this._data) {
+                hander(key, this._data[key]);
+            }
+        }
     }
 
     /**
