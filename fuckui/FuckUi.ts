@@ -38,7 +38,7 @@ export default class FuckUi extends cc.Component {
     }
 
     public setData(d: string) {
-        if (d == null) return;
+        if (d == 'null') return;
         if (this.saveIgnore && d == this._oldData) return;
         this._oldData = d;
         d = JSON.parse(d);
