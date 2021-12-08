@@ -1818,7 +1818,7 @@ export namespace no {
     export let audioManager = new AudioManager();
 
     /**节点管理类 */
-    class NodeTargetManager extends cc.Component {
+    class NodeTargetManager {
 
         private tagetMap: Map<string, any> = new Map();
 
@@ -2248,4 +2248,77 @@ export namespace no {
             return r;
         }
     }
+
+    class Database {
+        private _tables: any;
+
+        constructor() {
+            this._tables = new Object();
+        }
+
+        /**
+         * 设置表
+         * @param name 表名
+         * @param data 数据
+         */
+        public setTable(name: string, data = {}) {
+            this._tables[name] = data;
+        }
+
+        /**
+         * 查表
+         * @param tableNames [表名]
+         * @param expression RelationQuery的查询表达式
+         * @returns
+         */
+        public select(tableNames: string[], expression: string): any {
+            let datas = {};
+            tableNames.forEach(n => {
+                datas[n] = this._tables[n];
+            });
+            return RelationQuery.new.select(expression, datas);
+        }
+
+        /**
+         * 向表增加一条数据
+         * @param tableName 表名
+         * @param id
+         * @param value
+         * @returns
+         */
+        public insert(tableName: string, id: string | number, value: any): any {
+            this._tables[tableName] = this._tables[tableName] || {};
+            this._tables[tableName][id] = value;
+            return this._tables[tableName];
+        }
+
+        /**
+         * 删除表中某条数据
+         * @param tableName 表名
+         * @param id
+         * @returns
+         */
+        public delete(tableName: string, id: string | number): any {
+            if (!this._tables[tableName]) return null;
+            let a = this._tables[tableName][id];
+            delete this._tables[tableName][id];
+            return a;
+        }
+
+        /**
+         * 更新表中某条数据
+         * @param tableName 表名
+         * @param path 数据访问路径,如a.b.c或[a,b,c]
+         * @param value
+         * @returns
+         */
+        public update(tableName: string, path: string | string[], value: any): any {
+            if (!this._tables[tableName]) return null;
+            if (typeof path == 'string')
+                setValue(this._tables[tableName], path, value);
+            else setValuePath(this._tables[tableName], path, value);
+            return this._tables[tableName];
+        }
+    }
+    export let database = new Database();
 }
