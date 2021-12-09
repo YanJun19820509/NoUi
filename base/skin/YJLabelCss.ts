@@ -13,7 +13,7 @@ const { ccclass, property, requireComponent, menu, executeInEditMode } = cc._dec
  */
 @ccclass
 @requireComponent(cc.Label)
-@menu('NoUi/css/YJLabelCss(将css转为label属性)')
+@menu('NoUi/skin/YJLabelCss(将css转为label属性)')
 @executeInEditMode()
 export default class YJLabelCss extends cc.Component {
 
