@@ -707,6 +707,7 @@ export namespace no {
      * @param callback
      */
     export function loadAnyInEditor<T extends cc.Asset>(path: string, callback: (item: T) => void): void {
+        if (!CC_EDITOR) return;
         Editor.assetdb.queryAssets(`db://assets/${path}.*`, null, (err, assetInfos) => {
             cc.assetManager.loadAny({ uuid: assetInfos[0].uuid }, (e, f: T) => {
                 callback(f);

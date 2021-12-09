@@ -223,20 +223,6 @@ let mixEngine = function () {
             let p = this._maxRect.find(width, height);
             if (!p) return null;
             let x = p.x, y = p.y;
-            // if ((this._x + width + space) > this._width) {
-            //     this._x = space;
-            //     this._y = this._nexty;
-            // }
-
-            // if ((this._y + height + space) > this._nexty) {
-            //     this._nexty = this._y + height + space;
-            // }
-
-            // if (this._nexty > this._height) {
-            //     this._nexty = this._y;
-            //     return null;
-            // }
-            // let x = this._x, y = this._y;
 
             spriteFrame['_tmpAtlasId'] = this._texture._id;
             if (spriteFrame instanceof cc.SpriteFrame) {
@@ -260,10 +246,7 @@ let mixEngine = function () {
 
             this._count++;
 
-            // this._x += width + space;
-
             this._innerSpriteFrames.push(spriteFrame);
-            // cc.dynamicAtlasManager.updateAtlasComp(_uuid, this._texture._id);
             return frame;
         },
 

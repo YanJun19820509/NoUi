@@ -42,10 +42,6 @@ export class TmpAtlasManager {
     public create(type: string, bigger = 1) {
         if (!this._cd()) { return; }
         if (!this._enable || TmpAtlasManager._excludes.includes(type)) { return; }
-        // if (this._lastRemove == type) {
-        //     this._lastRemove = null
-        //     return;
-        // }
         if (!cc.dynamicAtlasManager['tmpAtlasByName'](type)) {
             cc.dynamicAtlasManager['setTmpAtlas'](type, bigger);
             console.error(`setTmpAtlas${this.tmpAtlasNum}---${type}`);
@@ -55,9 +51,6 @@ export class TmpAtlasManager {
      * 删除临时动态合图
      */
     public remove(type: string) {
-        // if (this._lastRemove && this._lastRemove == type) { return; }
-        // this._remove(this._lastRemove);
-        // this._lastRemove = type;
         this._remove(type);
     }
 

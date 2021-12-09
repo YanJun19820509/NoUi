@@ -17,7 +17,7 @@ export class Json2UiDataInfo {
     ui: FuckUi = null;
 }
 /**
- * 将json string转any,并在onEnable时给fuckui赋值
+ * 将json string转any,并在start时给fuckui赋值
  */
 @ccclass
 @menu('NoUi/base/YJSetJson2UiData(json转ui data:string)')
@@ -26,7 +26,7 @@ export default class YJSetJson2UiData extends cc.Component {
     @property(Json2UiDataInfo)
     infos: Json2UiDataInfo[] = [];
 
-    onEnable() {
+    start() {
         this.infos.forEach(info => {
             if (info.json == '' || !info.ui) return;
             let data = JSON.parse(info.json);
