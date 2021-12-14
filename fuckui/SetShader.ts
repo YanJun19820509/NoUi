@@ -22,7 +22,7 @@ const { ccclass, menu } = cc._decorator;
 export default class SetShader extends FuckUi {
 
     private _renderComp: cc.RenderComponent;
-    private _canWork: boolean = false;
+    private _loaded: boolean = false;
 
     protected onDataChange(data: any) {
         if (!this._renderComp) {
@@ -34,7 +34,14 @@ export default class SetShader extends FuckUi {
     }
 
     public work() {
-        this._canWork = true;
+        if (!this._loaded) {
+            this.scheduleOnce(() => {
+                this.work();
+            }, 0);
+            return;
+        }
+        let m = this._renderComp.getMaterial(0);
+        this.setOriginalSize(m);
     }
 
     private setMaterial(path: string, properties: any, defines: any) {
@@ -58,12 +65,7 @@ export default class SetShader extends FuckUi {
             if (material.getDefine(key) != undefined)
                 material.define(key, defines[key]);
         }
-        this.schedule(() => {
-            if (this._canWork) {
-                this.unscheduleAllCallbacks();
-                this.setOriginalSize(material);
-            }
-        });
+        this._loaded = true;
     }
 
     //对于合图内的纹理，需要重新计算纹理在合图内的宽高并传给材质中的shader
