@@ -27,10 +27,10 @@ export default class YJDataWork extends cc.Component {
         this.init();
     }
 
-    onEnable() {
-        this.initData();
-    }
-
+    /**
+     * 初始化，可手动执行，或在onLoad时自动执行，若希望当节点在场景中显示出来之前数据就初始化好，就要在创建节点时（加入场景前）执行init并执行数据相关操作
+     * @returns
+     */
     public init() {
         if (this._ready) return;
         this.register.onNewUiRegister = (key: string, ui: FuckUi) => {
@@ -88,9 +88,5 @@ export default class YJDataWork extends cc.Component {
                 ui.setData(JSON.stringify(a));
             }
         });
-    }
-
-    protected initData() {
-
     }
 }
