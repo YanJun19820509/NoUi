@@ -7,6 +7,7 @@
 
 import { no } from "../no";
 import { YJComponent } from "./YJComponent";
+import YJDataWork from "./YJDataWork";
 
 const { ccclass, property, menu } = cc._decorator;
 
@@ -41,11 +42,14 @@ export default class YJPreload extends YJComponent {
     @property({ displayName: '自动运行' })
     auto: boolean = true;
 
+    @property({ type: YJDataWork, tooltip: '设置加载进度相关数据：总量total，完成量finished，阶段进度progress' })
+    dataWork: YJDataWork = null;
+
     @property({ type: no.EventHandlerInfo, displayName: '加载前' })
     beforeCall: no.EventHandlerInfo[] = [];
 
-    @property({ type: no.EventHandlerInfo, displayName: '加载中' })
-    progressingCall: no.EventHandlerInfo[] = [];
+    // @property({ type: no.EventHandlerInfo, displayName: '加载中',  })
+    // progressingCall: no.EventHandlerInfo[] = [];
 
     @property({ type: no.EventHandlerInfo, displayName: '加载完成' })
     completeCall: no.EventHandlerInfo[] = [];
@@ -182,11 +186,25 @@ export default class YJPreload extends YJComponent {
 
     private checkState(): boolean {
         if (this.finished >= this.total) {
-            no.EventHandlerInfo.execute(this.progressingCall, this.total, this.finished, this.progress);
+            // no.EventHandlerInfo.execute(this.progressingCall, this.total, this.finished, this.progress);
+            if (this.dataWork) {
+                this.dataWork.data = {
+                    total: this.total,
+                    finished: this.finished,
+                    progress: this.progress
+                }
+            }
             no.EventHandlerInfo.execute(this.completeCall);
             return false;
         } else {
-            no.EventHandlerInfo.execute(this.progressingCall, this.total, this.finished, this.progress);
+            // no.EventHandlerInfo.execute(this.progressingCall, this.total, this.finished, this.progress);
+            if (this.dataWork) {
+                this.dataWork.data = {
+                    total: this.total,
+                    finished: this.finished,
+                    progress: this.progress
+                }
+            }
             return true;
         }
     }
