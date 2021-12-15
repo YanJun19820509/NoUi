@@ -8,18 +8,18 @@
 import SetNodeTweenAction from "../fuckui/SetNodeTweenAction";
 import { no } from "../no";
 
-const { ccclass, property, menu } = cc._decorator;
+const { ccclass, menu } = cc._decorator;
 /**
  * 设置闪烁动效
  * @data {
  *  frequency: 3,
- *  repeat?: 0 
+ *  repeat?: 0
  * }
  * @frequency 频率，每秒闪动次数
  * @repeat 重复次数，0表示无限次（最多999次），>0表示有限次，为null则不重复
  */
 @ccclass
-@menu('NoUi/effects/SetBlink(闪烁动效:object)')
+@menu('NoUi/tween/SetBlink(闪烁动效:object)')
 export default class SetBlink extends SetNodeTweenAction {
 
     protected createAction(data: any): cc.Tween<cc.Node> {

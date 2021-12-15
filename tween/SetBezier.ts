@@ -19,7 +19,7 @@ const { ccclass, menu } = cc._decorator;
  * }
  */
 @ccclass
-@menu('NoUi/effects/SetBezier(贝塞尔曲线动效:object)')
+@menu('NoUi/tween/SetBezier(贝塞尔曲线动效:object)')
 export default class SetBezier extends SetNodeTweenAction {
 
     protected createAction(data: any): cc.Tween<cc.Node> {
