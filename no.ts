@@ -1195,7 +1195,7 @@ export namespace no {
                     onProgress && onProgress(finished / total);
                 }, (err, items) => {
                     if (items == null || items.length == 0) {
-                        onProgress && onProgress(0);
+                        onProgress && onProgress(1);
                         no.log(err.message);
                     }
                 });
