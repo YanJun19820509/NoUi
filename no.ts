@@ -2321,5 +2321,60 @@ export namespace no {
             return this._tables[tableName];
         }
     }
+    /** 数据库单例 */
     export let database = new Database();
+
+    /**
+     * 简单的http请求
+     */
+    export class HttpRequest {
+        private Authorization: string;
+
+        /**
+         *
+         * @param author 权限认证字符串
+         */
+        constructor(author: string) {
+            this.Authorization = author;
+        }
+
+        private httpRequest(type: string, url: string, data: string | object, cb?: (v: any) => void): void {
+            let xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && (xhr.status >= 200 && xhr.status < 400)) {
+                    var response = xhr.responseText;
+                    let a = JSON.parse(response);
+                    cb?.(a);
+                } else if (xhr.readyState == 4 && xhr.status == 0) {
+                    cb?.('no_server');
+                }
+            };
+            xhr.open(type, url, true);
+            if (type == 'POST') {
+                xhr.setRequestHeader('Content-Type', 'application/json');
+            }
+            xhr.setRequestHeader('Authorization', this.Authorization);
+            xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
+            if (typeof data == 'object') {
+                data = JSON.stringify(data);
+            }
+            xhr.send(data);
+        }
+
+        public get(url: string): Promise<any> {
+            return new Promise<any>(resolve => {
+                this.httpRequest("GET", url, null, (v: any) => {
+                    resolve(v);
+                });
+            });
+        }
+
+        public post(url: string, data: string | object): Promise<any> {
+            return new Promise<any>(resolve => {
+                this.httpRequest("POST", url, data, (v: any) => {
+                    resolve(v);
+                });
+            });
+        }
+    }
 }
