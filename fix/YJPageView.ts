@@ -1,9 +1,3 @@
-// Learn TypeScript:
-//  - https://docs.cocos.com/creator/manual/en/scripting/typescript.html
-// Learn Attribute:
-//  - https://docs.cocos.com/creator/manual/en/scripting/reference/attributes.html
-// Learn life-cycle callbacks:
-//  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
 const { ccclass, property, menu } = cc._decorator;
 
@@ -52,7 +46,7 @@ export default class YJPageView extends cc.PageView {
         else if (i >= this.max) i = this.max - 1;
         this.scrollToPage(i, 0.1);
     }
-    
+
     public a_onTouchCancel(event: cc.Event.EventTouch, start: cc.Vec2, end: cc.Vec2) {
         this.a_onTouchEnd(event, start, end);
     }

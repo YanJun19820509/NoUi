@@ -1,9 +1,3 @@
-// Learn TypeScript:
-//  - https://docs.cocos.com/creator/manual/en/scripting/typescript.html
-// Learn Attribute:
-//  - https://docs.cocos.com/creator/manual/en/scripting/reference/attributes.html
-// Learn life-cycle callbacks:
-//  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
 import FuckUi from "./FuckUi";
 
@@ -15,18 +9,18 @@ const { ccclass, property, menu } = cc._decorator;
 export class MoveAlongWithPathDelegate {
     /**
      * 移动开始时
-     * @param m 
+     * @param m
      */
     public onStart(m: SetMoveAlongWithPath) { }
     /**
      * 改变方向时
-     * @param from 
-     * @param to 
+     * @param from
+     * @param to
      */
     public onChangeDirection(from: cc.Vec3, to: cc.Vec3): void { }
     /**
      * 移动中
-     * @param m 
+     * @param m
      */
     public onMoving(m: SetMoveAlongWithPath): void { }
     /**
@@ -43,8 +37,8 @@ export class MoveAlongWithPathDelegate {
     public onResume() { }
     /**
      * 移动过程中的特殊时刻
-     * @param d 
-     * @returns 
+     * @param d
+     * @returns
      */
     public onSpecialStep(d: any): boolean {
         return false;
