@@ -3,8 +3,8 @@
  */
 export class NativeBridge extends cc.SystemEvent {
 
-    private className: string;
-    private methodName: string;
+    private className: string = "ClientBridge";
+    private methodName: string = "onCall";
 
     /**登陆回调 */
     public static OnLoginCallback = 'OnLoginCallback';
@@ -111,4 +111,4 @@ export class NativeBridge extends cc.SystemEvent {
     }
 }
 
-window['callClientMethod'] = NativeBridge.onNativeCallback;
+window['onNativeCallback'] = NativeBridge.onNativeCallback;
